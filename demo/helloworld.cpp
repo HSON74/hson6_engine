@@ -1,8 +1,6 @@
 
-#include <iostream>
-#include <memory>
-#include <functional>
 #include "Engine.h"
+
 
 int main(int argc, const char *argv[])
 {
@@ -10,7 +8,16 @@ int main(int argc, const char *argv[])
     std::shared_ptr<engine::Engine> h = std::make_shared<engine::Engine>();
     h->e_StartUp(h);
     std::cout << "Engine is created\n";
-    h->e_ReunGameLoop(h->e_UpdateCallBack());
+
+    h->e_ReunGameLoop([&]() {
+        // code that will run inside the game loop
+        h->UserInput(h);
+        h->graphics->resize();
+        h->EngineForEach();
+        
+    });
+
+    //std::cout << std::systemfile::<<"\n";
     h->e_ShutDown();
     return 0;
 };

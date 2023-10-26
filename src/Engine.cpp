@@ -1,31 +1,75 @@
 
-#define GLFW_INCLUDE_NONE
-#include "GLFW/glfw3.h"
 #include "Engine.h"
-#include "Types.h"
-#include <iostream>
-#include "sokol_time.h"
-#include <chrono>
-#include <thread>
-#include <climits>
+#define CAT(x, y) CAT_(x, y)
+#define CAT_(x, y) x ## y
+/*#define STR(x) #x
+#define COMPONENT_TEMPLATE(type) {\
+    lua.set_function(CAT("Get",STR(type)), [&](EntityID e){return ECS::Get<type>(e)});\
+}*/
 
 
 using namespace m_Types;
 
 void engine::Engine::e_StartUp(std::shared_ptr<engine::Engine> &e)
 {
-	graphics->g_StartUp(e->Width, e ->Height, e->window_name, e->window_fullscreen);
+	graphics->g_StartUp();
+	inputs->StartUp();
+	sound->StartUp();
+	e_script->StartUp();
+	//ECS
+	e_script->lua.set_function("CreateObject", [&](const std::string name, const std::string path) {ecs->Create(name, path); });
+	e_script->lua.set_function("Destroy", [&](const std::string name) {
+		auto& container = ecs->GetAppropriateSparseSet<Sprite>();
+		for (const auto& [entity, value] : container) {
+			Sprite s = ecs->Get<Sprite>(entity);
+			if (name._Equal(s.imageName)) {
+				if (s.active) {
+					for (int i = 0; i < this->graphics->sprites.size(); i++) {
+						if (s.imageName._Equal(this->graphics->sprites.at(i).imageName)) {
+							std::string a = this->graphics->sprites.at(i).imageName;
+							this->graphics->g_tex[a].destoryit();
+							this->graphics->g_tex.erase(a);
+							this->graphics->sprites.erase(this->graphics->sprites.begin() + i);
+						}
+					}
+				}
+				ecs->Destroy(entity);
+			}
+			
+		}
+		});
+	e_script->lua.set_function("GetSprite", [&](EntityID e) -> Sprite& { return ecs->Get<Sprite>(e); });
+	e_script->lua.set_function("SetHealth", [&](EntityID e, double p) {ecs->Get<Health>(e).percent = p; });
+	e_script->lua.set_function("SetPosition", [&](EntityID e, float x, float y, float z) {ecs->Get<Position>(e).x += x; ecs->Get<Position>(e).y += y; ecs->Get<Position>(e).z += z; });
+	
+	e_script->lua.set_function("SetScale", [&](EntityID e, float x, float y) {ecs->Get<Sprite>(e).scale.x = x; ecs->Get<Sprite>(e).scale.y += y;});
+	e_script->lua.set_function("Collide", [&](EntityID e, std::string tag) {return ecs->Collider(e, tag); });
+	
+	e_script->lua.set_function("AddScript", [&](EntityID e, const std::string name){addScript(e, name); });
+	e_script->lua.set_function("GetScript", [&](EntityID e) -> Script& {return ecs->Get<Script>(e); });
+	e_script->lua.set_function("LoadScript", [&](const std::string name, const std::string path) {e_script->LoadScript(name, path); });
+	e_script->lua.set_function("Quit", [&]() {e->graphics->ShouldQuit(); });
+	//Engine
+	e_script->lua.set_function("KeyIsDown", [&](const int keycode) { return GetKeyDown(keycode); });
+	//Sound
+    e_script->LoadScript("CoinCollect", "CoinCollect");	
+	std::string b = "CoinCollect";
+	e_script->ScriptMap[b]();
+	//e_my_function();
 	
 }
 
 void engine::Engine::e_ShutDown()
 {
-	
+	ecs->ForEach<Sprite>([&](EntityID e) {
+		ecs->Destroy(e);
+		});
 	graphics->g_Shutdown();
+	sound->Shutdown();
 	std::cout << "Engine Shutdown"<< std::endl;
 }
 
-void engine::Engine::e_ReunGameLoop(std::function<void(std::shared_ptr<engine::Engine> &e)> UpdateCallBack)
+void engine::Engine::e_ReunGameLoop(const e_UpdateCallback& callback)
 {
 	int i = 0;
 	int input_i = 0;
@@ -34,22 +78,14 @@ void engine::Engine::e_ReunGameLoop(std::function<void(std::shared_ptr<engine::E
 	double start_time = glfwGetTime();
 	double dt = (1. / 60.);
 	double accumulator = 0.0f;
-    while (true) {
-		
+    while (this->graphics->window_isRunning) {
 		
 		inputs->Update();
-
-		UpdateCallBack;
-
-		graphics->Draw();
-
-		std::cout << "Choose a number the is greater than zero: ";
-		std::cin >> input_i;
-		if (input_i < 0 || input_i > INT_MAX || i > INT_MAX || i + input_i > INT_MAX) { //Enter any negative number to quit
-			break;
-		}
-		i += input_i;
-		std::cout << "You number is: " << i << std::endl;
+		glfwWaitEvents();
+		//e_Update();
+		callback();
+		
+		graphics->Draw(graphics->sprites);
 		
 
 		// Manage timestep
@@ -63,14 +99,126 @@ void engine::Engine::e_ReunGameLoop(std::function<void(std::shared_ptr<engine::E
 		{
 			accumulator -= dt;
 		}
-		
+		glfwPostEmptyEvent();
     }
 }
-std::function<void(std::shared_ptr<engine::Engine> &e)> engine::Engine::e_UpdateCallBack()
-{
-	return std::function<void(std::shared_ptr<engine::Engine>&e)>();
+
+void engine::Engine::HelloUser() {
+	std::cout << "Hello User" << std::endl;
 }
+void engine::Engine::UserInput(std::shared_ptr<engine::Engine>& e) {
+	
+	if (glfwWindowShouldClose(e->graphics->window)) {
+		std::cout << "User click on the exit box" << std::endl;
+		e->graphics->ShouldQuit();
+	}
+	
+	if (e->inputs->KeyIsPressed(e->graphics->window, GLFW_KEY_Q, GLFW_PRESS) || e->inputs->KeyIsPressed(e->graphics->window, GLFW_KEY_ESCAPE, GLFW_PRESS)) {
+		std::cout << "User press Q or Escape to close Windows" << std::endl;
+		e->graphics->ShouldQuit();
+	}
+	
+	
+	
+}
+void engine::Engine::EngineForEach()
+{
+	ecs->ForEach<Sprite>([&](EntityID entity) {
+		Sprite& sprite = ecs->Get<Sprite>(entity);
+		ecs->Get<Sprite>(entity).position = ecs->Get<Position>(entity);
+		
+		if (sprite.active && !sprite.in_active) {
+			
+			this->graphics->sprites.push_back(sprite);
+			this->graphics->LoadImage(sprite.imageName, sprite.imagePath);
+			ecs->Get<Sprite>(entity).in_active = true;
+		}
+		for (int m_s_i = 0; m_s_i < this->graphics->sprites.size(); m_s_i++) {
+			if (sprite.imageName._Equal(this->graphics->sprites.at(m_s_i).imageName)) {
+				this->graphics->sprites.at(m_s_i).position = sprite.position;
+
+			}
+		}
+		if (!sprite.active && sprite.in_active) {
+			for (int m_s_i = 0; m_s_i < this->graphics->sprites.size(); m_s_i++) {
+				if (ecs->Get<Sprite>(entity).imageName._Equal(this->graphics->sprites.at(m_s_i).imageName)) {
+					std::string a = this->graphics->sprites.at(m_s_i).imageName;
+					this->graphics->g_tex[a].destoryit();
+					this->graphics->g_tex.erase(a);
+					this->graphics->sprites.erase(this->graphics->sprites.begin() + m_s_i);
+				}
+			}
+			ecs->Get<Sprite>(entity).in_active = false;
+		}
+		}
+	);
+	ecs->ForEach<Sprite, Rigidbody>([&] EntityID e) {
+
+	}
+	ecs->ForEach<Sprite, Health>([&](EntityID e) {
+
+		if (ecs->Get<Health>(e).percent < 0 && ecs->Get<Health>(e).percent != DBL_MIN) {
+			for (int m_s_i = 0; m_s_i < this->graphics->sprites.size(); m_s_i++) {
+				if (ecs->Get<Sprite>(e).imageName._Equal(this->graphics->sprites.at(m_s_i).imageName)) {
+					std::string a = this->graphics->sprites.at(m_s_i).imageName;
+					this->graphics->g_tex[a].destoryit();
+					this->graphics->g_tex.erase(a);
+					this->graphics->sprites.erase(this->graphics->sprites.begin() + m_s_i);
+					std::cout << a << " is died" << std::endl;
+				}
+			}
+			if (!ecs->Get<Script>(e).name.empty()) { e_script->ScriptMap.erase(ecs->Get<Script>(e).name); }
+			ecs->Destroy(e);
+		}
+
+		});
+	ecs->ForEach<Script>([&](EntityID entity) {
+		if (!ecs->Get<Script>(entity).name.empty()) {
+
+			std::string script_name = ecs->Get<Script>(entity).name;
+			//std::cout << entity << std::endl;
+			if (e_script->ScriptMap.count(script_name) == 0) {
+				std::cout << script_name << std::endl;
+				e_script->LoadScript(script_name, script_name);
+			}
+			sol::protected_function_result script2result = e_script->ScriptMap[script_name]();
+			if (script2result.valid()) {
+				//std::cout << script_name << std::endl;
+			}
+			else {
+				sol::error err = script2result;
+				std::string what = err.what();
+				std::cout << "What is the problem: " << what << std::endl;
+			}
+		}
+		}
+	);
+}
+void engine::Engine::addScript(EntityID e, const std::string name)
+{
+	this->ecs->Get<Script>(e).name = name;
+}
+bool engine::Engine::GetKeyDown(int key) {
+	bool old = this->inputs->KeyIsPressed(this->graphics->window, key, GLFW_PRESS);
+	return old;
+
+};
 engine::Engine::Engine() {
 	engine::Engine::graphics = std::make_shared<GraphicsManager>();
 	engine::Engine::inputs = std::make_shared<InputManager>();
+	engine::Engine::sound = std::make_shared<SoundManager>();
+	engine::Engine::ecs = std::make_shared<ECS>();
+	engine::Engine::e_script = std::make_shared<ScriptsManager>();
+	engine::Engine::graphics->window_isRunning = true;
+}
+void engine::Engine::e_my_function()
+{
+
+
+}
+
+void engine::Engine::e_Update()
+{
+	
+	
 }

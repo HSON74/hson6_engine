@@ -1,13 +1,13 @@
 #pragma
-
-#include "sokol_time.h"
-#include <chrono>
-#include <thread>
+#include "Types.h"
 
 class InputManager
 {
 	public:
-		int input_num = 0;
+		int inputKey;
+		int key_input;
 		void Update();
+		void StartUp();
+		bool KeyIsPressed(GLFWwindow* window, int key, int action);
 		InputManager() = default;
 };
