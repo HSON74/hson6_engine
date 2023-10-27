@@ -45,7 +45,6 @@ namespace m_Types
     
 }
 struct Position : m_Types::vec3 {}; // or: struct Position : public vec2 {};
-struct Velocity : m_Types::vec3 {}; // or: struct Velocity : public vec2 {};
 struct Health { m_Types::real percent; };
 struct Script { std::string name; };
 struct Sprite {
@@ -70,13 +69,17 @@ struct Rigidbody {
     m_Types::vec3 AngularVelocity;
     
 };
-struct BoxCollider {
+struct Camera {
+    bool active;
+};
+struct Collider {
+    bool active;
     m_Types::vec3 offset; //Center
+};
+struct BoxCollider : Collider {
     m_Types::vec3 size;
 };
-struct Camera {
 
-};
 
 const float DeltaTime = 1.0f / 60.0f;
 enum INPUTVALUE {

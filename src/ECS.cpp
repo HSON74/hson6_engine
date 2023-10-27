@@ -40,10 +40,14 @@ EntityID ECS::Create(std::string m_name, std::string m_path)
 		this->Get<BoxCollider>(old).offset = m_Types::vec3(0, 0, 0);
 
 	}
+	this->Get<BoxCollider>(old).active = true;
 	this->Get<Sprite>(old).active = true;
 	this->Get<Sprite>(old).in_active = false;
-	std::cout << this->Get<Sprite>(old).imageName << std::endl;
-	std::cout << this->Get<Sprite>(old).imagePath << std::endl;
+	this->Get<Position>(old).x = 0;
+	this->Get<Position>(old).y = 0;
+	this->Get<Position>(old).z = 0;
+	//std::cout << this->Get<Sprite>(old).imageName << std::endl;
+	//std::cout << this->Get<Sprite>(old).imagePath << std::endl;
 	return old;
 }
 void ECS::setPosition(EntityID e, m_Types::vec3 v)
@@ -51,7 +55,7 @@ void ECS::setPosition(EntityID e, m_Types::vec3 v)
 	this->Get<Position>(e).x = v.x;
 	this->Get<Position>(e).y = v.y;
 	this->Get<Position>(e).z = v.z;
-	this->Get<Rigidbody>(e).offset = v;
+	this->Get<BoxCollider>(e).offset = v;
 }
 bool ECS::Collider(EntityID e, std::string tag)
 {

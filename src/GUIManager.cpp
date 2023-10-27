@@ -2,7 +2,7 @@
 
 void GUIManager::Startup()
 {
-	ImGui::CreateContext();
+	//ImGui::CreateContext();
 
 }
 

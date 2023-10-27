@@ -152,9 +152,22 @@ void engine::Engine::EngineForEach()
 		}
 		}
 	);
-	ecs->ForEach<Sprite, Rigidbody>([&] EntityID e) {
-
-	}
+	ecs->ForEach<Sprite, Rigidbody, Position>([&](EntityID e) {
+		Sprite s = ecs->Get<Sprite>(e);
+		Position s_position = ecs->Get<Position>(e);
+		Rigidbody s_rigidbody = ecs->Get<Rigidbody>(e);
+		auto a = ecs->GetAppropriateSparseSet<Collider>();
+		if (s.active && s_rigidbody.active) {
+			s_position.x = s_position.x + s_rigidbody.velocity.x + DeltaTime;
+			s_position.z = s_position.z + s_rigidbody.velocity.z + DeltaTime;
+			s_position.y = (float)(0.5 * DeltaTime * DeltaTime * s_rigidbody.meters_per_second + DeltaTime * s_rigidbody.velocity.y + s_position.y);
+			ecs->Get<Sprite>(e).position = s_position;
+			ecs->Get<Position>(e) = s_position;
+			if (a[e].active) {
+				a[e].offset = s_position - a[e].offset;
+			}
+		}
+		});
 	ecs->ForEach<Sprite, Health>([&](EntityID e) {
 
 		if (ecs->Get<Health>(e).percent < 0 && ecs->Get<Health>(e).percent != DBL_MIN) {
