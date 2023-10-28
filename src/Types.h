@@ -27,6 +27,7 @@
 #include <unordered_map>
 #include <typeindex>
 #include <sstream>
+#include <math.h>
 #include <sol/sol.hpp>
 #include <imgui.h>
 //#include <backends/imgui_impl_wgpu.h>

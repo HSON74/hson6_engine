@@ -55,5 +55,5 @@ public:
     void resize();
     bool LoadImage(const std::string& name, const std::string& path);
     void ShouldQuit();
-
+    glm::mat4 multmatrix(glm::mat4 a, glm::mat4);
 };

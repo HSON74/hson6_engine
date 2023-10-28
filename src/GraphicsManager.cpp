@@ -137,10 +137,10 @@ void GraphicsManager::g_StartUp()
 @group(0) @binding(2) var texData: texture_2d<f32>;
 
 struct VertexInput {
-    @location(0) position: vec2f,
+    @location(0) position: vec3f,
     @location(1) texcoords: vec2f,
     @location(2) translation: vec3f,
-    @location(3) scale: f32,
+    @location(3) scale: vec3f,
 };
 
 struct VertexOutput {
@@ -151,7 +151,7 @@ struct VertexOutput {
 @vertex
 fn vertex_shader_main( in: VertexInput ) -> VertexOutput {
     var out: VertexOutput;
-    out.position = uniforms.projection * vec4f( vec3f( in.scale * in.position, 0.0 ) + in.translation, 1.0 );
+    out.position = uniforms.projection * vec4f( vec3f( in.scale * in.position ) + in.translation, 1.0 );
     out.texcoords = in.texcoords;
     return out;
 }
@@ -369,7 +369,25 @@ void GraphicsManager::ShouldQuit() {
     window_isRunning = false;
    
     glfwSetWindowShouldClose(window, 1);
-};
+}
+glm::mat4 GraphicsManager::multmatrix(glm::mat4 a, glm::mat4 b)
+{
+    glm::mat4 result;
+    for (int h = 0; h < 4; h++) {
+        for (int u = 0; u < 4; u++) {
+            result[h][u] = 0.0f;
+        }
+    }
+    for (int h = 0; h < 4; h++) {
+        for (int u = 0; u < 4; u++) {
+            for (int y = 0; y < 4; y++) {
+                result[h][u] += a[h][y] * b[y][u];
+            }
+        }
+    }
+    return result;
+}
+;
 
 void GraphicsManager::Draw(std::vector<Sprite>& sprites) {
     
@@ -395,10 +413,11 @@ void GraphicsManager::Draw(std::vector<Sprite>& sprites) {
 
      Uniforms uniforms;
     // Start with an identity matrix.
+    //uniforms.projection = mat4{1};
     uniforms.projection = mat4{1};
     // Scale x and y by 1/100.
     uniforms.projection[0][0] = uniforms.projection[1][1] = 1. / 100.;
-    // Scale the long edge by an additional 1/(long/short) = short/long.
+    /*// Scale the long edge by an additional 1/(long/short) = short/long.
     if (Width < Height) {
         uniforms.projection[1][1] *= Width;
         uniforms.projection[1][1] /= Height;
@@ -406,11 +425,19 @@ void GraphicsManager::Draw(std::vector<Sprite>& sprites) {
     else {
         uniforms.projection[0][0] *= Height;
         uniforms.projection[0][0] /= Width;
-    } 
-    std::cout << "Width: " << Width << std::endl;
-    std::cout << "Height: " << Height << std::endl;
-    std::cout << "u_Width: " << uniforms.projection[0][0] << std::endl;
-    std::cout << "u_Height: " << uniforms.projection[1][1] << std::endl;
+    } */
+    if (Width < Height) {
+        uniforms.projection = mat4({ 2.0f / (Height - (-Height)), 0, 0, -((Height + (-Height))) / ((Height - (-Height))) },
+            { 0, 2.0f / (Width - (-Width)), 0, -(Width + (-Width)) / (Width - (-Width)) },
+            { 0, 0, -2.0f / ((Height - (-Height))), -((Height + (-Height))) / ((Height - (-Height))) },
+            { 0, 0, 0, 1 });
+    }
+    else {
+        uniforms.projection = mat4({ 2.0f / (Width - (-Width)), 0, 0, -((Width + (-Width))) / ((Width - (-Width))) },
+            { 0, 2.0f / (Height - (-Height)), 0, -(Height + (-Height)) / (Height - (-Height)) },
+            { 0, 0, -2.0f / ((Width - (-Width))), -((Width + (-Width))) / ((Width - (-Width))) },
+            { 0, 0, 0, 1 });
+    }
     wgpuQueueWriteBuffer(queue, uniform_buffer, 0, &uniforms, sizeof(Uniforms));
     WGPUBindGroup bind_group = nullptr;
     if (sprites.size() > 0) {
@@ -427,18 +454,43 @@ void GraphicsManager::Draw(std::vector<Sprite>& sprites) {
             InstanceData d;
             Sprite s = sprites.at(i);
 
-            d.translation = vec3((float)((float)s.position.x* uniforms.projection[0][0]*50), (float)((float)s.position.y * uniforms.projection[1][1]*50), s.position.z);
-            std::cout << "s_Width: " << d.translation.x << std::endl;
-            std::cout << "s_Height: " << d.translation.y << std::endl;
-            m_Types::vec2 m_scale;
-            if (g_tex[s.imageName].width < g_tex[s.imageName].height) {
-                m_scale = m_Types::vec2(m_Types::real(g_tex[s.imageName].width) / g_tex[s.imageName].height, 1.0);
-            }
-            else {
-                m_scale = vec2(1.0, m_Types::real(g_tex[s.imageName].height) / m_Types::real(g_tex[s.imageName].width));
-            }
-           // d.scale = vec3(s.scale.x * 10, s.scale.y * 10, s.scale.z*10);
-            d.scale = vec3(m_scale.x * 10, m_scale.y * 10, s.scale.z * 10);
+           d.translation = vec3((float)((float)s.position.x), (float)((float)s.position.y), (float)s.position.z);
+
+           d.scale = vec3(s.scale.x * 100, s.scale.y * 100, s.scale.z*100);
+           glm::mat4 R = { {1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1} };
+           for (int a = 0; a < 3; a++) {
+               glm::mat4 I = { {1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1} };
+               float x = 0 / (float)std::sqrt(1);
+               float y = 0 / (float)std::sqrt(1);
+               float z = 0 / (float)std::sqrt(1);
+               
+               float c; 
+               float g; 
+               float angle_x = (float)(s.rotation.x * 3.14) / 180.0f;
+               float angle_y = (float)(s.rotation.y * 3.14) / 180.0f;
+               float angle_z = (float)(s.rotation.z * 3.14) / 180.0f;
+               if (a == 0) {
+                   x = 1 / (float)std::sqrt(1);
+                   c = std::cos(angle_x);
+                   g = std::sin(angle_x);
+               }
+               else if (a == 1) {
+                   y = 1 / (float)std::sqrt(1);
+                   c = std::cos(angle_y);
+                   g = std::sin(angle_y);
+               }
+               else if (a == 2) {
+                   z = 1 / (float)std::sqrt(1);
+                   c = std::cos(angle_z); 
+                   g = std::sin(angle_z);
+               }
+               I[0][0] = x * x * (1 - c) + c;	 I[0][1] = x * y * (1 - c) - z * g;		I[0][2] = x * z * (1 - c) + y * g;
+               I[1][0] = y * x * (1 - c) + z * g;	 I[1][1] = y * y * (1 - c) + c;		I[1][2] = y * z * (1 - c) - x * g;
+               I[2][0] = z * x * (1 - c) - y * g;	 I[2][1] = z * y * (1 - c) + x * g;		I[2][2] = z * z * (1 - c) + c;
+               R = multmatrix(R, I);
+           }
+           d.scale = vec3(s.scale.x * 100 * R[0][0], s.scale.y * 100* R[1][1], s.scale.z * 100 * R[2][2]);
+           // d.scale = vec3(m_scale.x * 100, m_scale.y * 100, s.scale.z * 100);
             wgpuQueueWriteBuffer(queue, instance_buffer, i * sizeof(InstanceData), &d, sizeof(InstanceData));
 
             auto layout = wgpuRenderPipelineGetBindGroupLayout(pipeline, 0);

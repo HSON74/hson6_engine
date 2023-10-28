@@ -164,7 +164,7 @@ void engine::Engine::EngineForEach()
 			ecs->Get<Sprite>(e).position = s_position;
 			ecs->Get<Position>(e) = s_position;
 			if (a[e].active) {
-				a[e].offset = s_position - a[e].offset;
+				a[e].offset = s_position + a[e].offset;
 			}
 		}
 		});
