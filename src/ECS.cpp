@@ -64,9 +64,16 @@ bool ECS::Collider(EntityID e, std::string tag)
 	ForEach<Sprite>([&](EntityID e1) {
 		Sprite coll_s1 = Get<Sprite>(e1);
 		if (coll_s1.tag._Equal(tag)) {
+			CollideChange(e, e1);
 			result = true;
 		}
 		
 	});
 	return false;
+}
+void ECS::CollideChange(EntityID e1, EntityID e2) {
+	m_Types::vec3 a = this->Get<Position>(e1);
+	m_Types::vec2 a_size = this->Get<Sprite>(e1).size;
+	m_Types::vec3 b = this->Get<Position>(e2);
+	m_Types::vec2 b_size = this->Get<Sprite>(e2).size;
 }

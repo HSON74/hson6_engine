@@ -7,10 +7,12 @@
   },
   "ExpandedNodes": [
     "",
+    "\\assets",
+    "\\assets\\Scripts",
     "\\demo",
     "\\out",
     "\\src"
   ],
-  "SelectedNode": "\\src\\GraphicsManager.cpp",
+  "SelectedNode": "\\assets\\Scripts\\CoinCollect.lua",
   "PreviewInSolutionExplorer": false
 }
