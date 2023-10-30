@@ -1,3 +1,5 @@
 # Xmake
+/.vs
 /build
 /.xmake
+/out
