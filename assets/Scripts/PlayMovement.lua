@@ -10,18 +10,6 @@ function update()
 		SetPosition(0, 0, -10, 0)
 	end
 	--Future: Update the collide to take tag
-	if Collide(0, "Coin1") then
-		Destroy("Coin1")
-	end
-	if Collide(0, "Coin") then
-		Destroy("Coin2")
-	end
-	if Collide(0, "Coin") then
-		Destroy("Coin3")
-	end
-	if Collide(0, "Coin") then
-		Destroy("Coin4")
-	end
 end
 
 update()

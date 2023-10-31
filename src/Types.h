@@ -75,6 +75,7 @@ struct Camera {
 };
 struct Collider {
     bool active;
+    bool IsStatis = true;
     m_Types::vec3 offset; //Center
 };
 struct BoxCollider : Collider {
@@ -334,3 +335,18 @@ enum INPUTVALUE {
 
 #define 	GLFW_KEY_LAST   GLFW_KEY_MENU
 };
+/*float distancePointtoPoint(const m_Types::vec2& a, const m_Types::vec2& b) {
+    return std::hypot(a.x - b.x, a.y - b.y);
+};
+float distancePointtoCircle(const m_Types::vec2& a, const m_Types::vec2& center, float radius) {
+    return distancePointtoPoint(a, center) - radius;
+};
+float dotproduct(const m_Types::vec2& a) {
+    return (a.x * a.x) + (a.y * a.y);
+};
+float distancePointtoLine(const m_Types::vec2& a, const m_Types::vec2& b, m_Types::vec2& normal) {
+    m_Types::vec2 c;
+    c.x = a.x - b.x;
+    c.y = a.y - b.y;
+    return dotproduct(c) * normal.x  + dotproduct(c) * normal.y;
+};*/

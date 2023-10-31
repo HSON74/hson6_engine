@@ -60,8 +60,8 @@ public:
 		return result && GetAppropriateSparseSet<T>().count(entity) > 0;
 	}*/
 	void setPosition(EntityID e, m_Types::vec3 v);
-	bool Collider(EntityID e, std::string tag);
-	void CollideChange(EntityID e1, EntityID e2);
+	bool Collide(EntityID e, std::string tag);
+	bool BoxCollide(EntityID e1, EntityID e2);
 	// Destroy the entity by removing all components.
 	void Destroy(EntityID e) {
 		for (const auto& [index, comps] : m_components) { comps->Drop(e); }

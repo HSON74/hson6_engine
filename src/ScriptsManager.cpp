@@ -84,7 +84,10 @@ void ScriptsManager::StartUp()
 
 void ScriptsManager::Shutdown()
 {
-
+    if (!ScriptMap.empty()) {
+        ScriptMap.clear();
+    }
+    
 };
 
 bool ScriptsManager::LoadScript(const std::string& name, const std::string& path)

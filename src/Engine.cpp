@@ -18,14 +18,14 @@ void engine::Engine::e_StartUp(std::shared_ptr<engine::Engine> &e)
 	e_script->StartUp();
 	//ECS
 	e_script->lua.set_function("CreateObject", [&](const std::string name, const std::string path) {ecs->Create(name, path); });
-	e_script->lua.set_function("Destroy", [&](const std::string name) {
+	e_script->lua.set_function("Destroy", [&](const EntityID e) {
 		auto& container = ecs->GetAppropriateSparseSet<Sprite>();
 		for (const auto& [entity, value] : container) {
 			Sprite s = ecs->Get<Sprite>(entity);
-			if (name._Equal(s.imageName)) {
+			if (e == (s.EntityN)) {
 				if (s.active) {
 					for (int i = 0; i < this->graphics->sprites.size(); i++) {
-						if (s.imageName._Equal(this->graphics->sprites.at(i).imageName)) {
+						if (s.EntityN == (this->graphics->sprites.at(i).EntityN)) {
 							std::string a = this->graphics->sprites.at(i).imageName;
 							this->graphics->g_tex[a].destoryit();
 							this->graphics->g_tex.erase(a);
@@ -40,11 +40,16 @@ void engine::Engine::e_StartUp(std::shared_ptr<engine::Engine> &e)
 		});
 	e_script->lua.set_function("GetSprite", [&](EntityID e) -> Sprite& { return ecs->Get<Sprite>(e); });
 	e_script->lua.set_function("SetHealth", [&](EntityID e, double p) {ecs->Get<Health>(e).percent = p; });
-	e_script->lua.set_function("SetPosition", [&](EntityID e, float x, float y, float z) {ecs->Get<Position>(e).x += x; ecs->Get<Position>(e).y += y; ecs->Get<Position>(e).z += z; });
+	e_script->lua.set_function("SetPosition", [&](EntityID e, float x, float y, float z) {ecs->setPosition(e, m_Types::vec3(x, y, z)); });
 	
 	e_script->lua.set_function("SetScale", [&](EntityID e, float x, float y) {ecs->Get<Sprite>(e).scale.x = x; ecs->Get<Sprite>(e).scale.y += y;});
-	e_script->lua.set_function("Collide", [&](EntityID e, std::string tag) {return ecs->Collider(e, tag); });
-	
+	e_script->lua.set_function("Collide", [&](EntityID e, std::string tag) {return ecs->Collide(e, tag); });
+	e_script->lua.set_function("AddRigidBody", [&](EntityID e) {
+		ecs->Get<Rigidbody>(e).active = true;
+		ecs->Get<Rigidbody>(e).mass = 1;
+		ecs->Get<Rigidbody>(e).velocity = vec3(0,0,0);
+		ecs->Get<Rigidbody>(e).meters_per_second = -0.0011;
+		});
 	e_script->lua.set_function("AddScript", [&](EntityID e, const std::string name){addScript(e, name); });
 	e_script->lua.set_function("GetScript", [&](EntityID e) -> Script& {return ecs->Get<Script>(e); });
 	e_script->lua.set_function("LoadScript", [&](const std::string name, const std::string path) {e_script->LoadScript(name, path); });
@@ -66,6 +71,8 @@ void engine::Engine::e_ShutDown()
 		});
 	graphics->g_Shutdown();
 	sound->Shutdown();
+	e_script->Shutdown();
+	
 	std::cout << "Engine Shutdown"<< std::endl;
 }
 
@@ -134,14 +141,14 @@ void engine::Engine::EngineForEach()
 			ecs->Get<Sprite>(entity).in_active = true;
 		}
 		for (int m_s_i = 0; m_s_i < this->graphics->sprites.size(); m_s_i++) {
-			if (sprite.imageName._Equal(this->graphics->sprites.at(m_s_i).imageName)) {
+			if (sprite.EntityN == (this->graphics->sprites.at(m_s_i).EntityN)) {
 				this->graphics->sprites.at(m_s_i).position = sprite.position;
 
 			}
 		}
 		if (!sprite.active && sprite.in_active) {
 			for (int m_s_i = 0; m_s_i < this->graphics->sprites.size(); m_s_i++) {
-				if (ecs->Get<Sprite>(entity).imageName._Equal(this->graphics->sprites.at(m_s_i).imageName)) {
+				if (ecs->Get<Sprite>(entity).EntityN == (this->graphics->sprites.at(m_s_i).EntityN)) {
 					std::string a = this->graphics->sprites.at(m_s_i).imageName;
 					this->graphics->g_tex[a].destoryit();
 					this->graphics->g_tex.erase(a);
@@ -152,27 +159,34 @@ void engine::Engine::EngineForEach()
 		}
 		}
 	);
-	ecs->ForEach<Sprite, Rigidbody, Position>([&](EntityID e) {
+	ecs->ForEach<Sprite, Position, BoxCollider>([&](EntityID e) {
 		Sprite s = ecs->Get<Sprite>(e);
-		Position s_position = ecs->Get<Position>(e);
+		m_Types::vec3 s_position;
 		Rigidbody s_rigidbody = ecs->Get<Rigidbody>(e);
-		auto a = ecs->GetAppropriateSparseSet<Collider>();
+		bool result = false;
 		if (s.active && s_rigidbody.active) {
-			s_position.x = s_position.x + s_rigidbody.velocity.x + DeltaTime;
-			s_position.z = s_position.z + s_rigidbody.velocity.z + DeltaTime;
-			s_position.y = (float)(0.5 * DeltaTime * DeltaTime * s_rigidbody.meters_per_second + DeltaTime * s_rigidbody.velocity.y + s_position.y);
-			ecs->Get<Sprite>(e).position = s_position;
-			ecs->Get<Position>(e) = s_position;
-			if (a[e].active) {
-				a[e].offset = s_position + a[e].offset;
+			ecs->ForEach< Sprite, BoxCollider>([&](EntityID e1) {
+				if (s.EntityN != ecs->Get<Sprite>(e1).EntityN) {
+					//std::cout << "Problem: " << ecs->Get<Sprite>(e1).EntityN << std::endl;
+					result = ecs->BoxCollide(e, e1);
+					std::cout << "Problem: " << result << std::endl;
+				}
+			});
+			s_position.x = s_rigidbody.velocity.x + DeltaTime;
+			s_position.z = s_rigidbody.velocity.z + DeltaTime;
+			s_position.y = (float)(0.5 * DeltaTime * DeltaTime * s_rigidbody.meters_per_second + DeltaTime * s_rigidbody.velocity.y);
+			ecs->setPosition(e, s_position);
+			if (ecs->Get<BoxCollider>(e).active) {
+				ecs->Get<BoxCollider>(e).offset = s_position;
 			}
+			
 		}
 		});
 	ecs->ForEach<Sprite, Health>([&](EntityID e) {
 
 		if (ecs->Get<Health>(e).percent < 0 && ecs->Get<Health>(e).percent != DBL_MIN) {
 			for (int m_s_i = 0; m_s_i < this->graphics->sprites.size(); m_s_i++) {
-				if (ecs->Get<Sprite>(e).imageName._Equal(this->graphics->sprites.at(m_s_i).imageName)) {
+				if (ecs->Get<Sprite>(e).EntityN == (this->graphics->sprites.at(m_s_i).EntityN)) {
 					std::string a = this->graphics->sprites.at(m_s_i).imageName;
 					this->graphics->g_tex[a].destoryit();
 					this->graphics->g_tex.erase(a);
