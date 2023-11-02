@@ -70,16 +70,7 @@ void ScriptsManager::StartUp()
             [](float f, const m_Types::vec3& v1) -> m_Types::vec3 { return f * v1; }
         )
     );
-   /* std::string tmpP = script_Path->pathToString(script_Path->getCurrentPath() / script_Path->stringToPath("assets") / script_Path->stringToPath("Scripts"));
 
-    for (const auto& entry :
-       std::filesystem::directory_iterator(script_Path->stringToPath(tmpP))) {
-        // Output the path of the file or subdirectory 
-        std::string t = script_Path->pathToString(entry.path());
-        std::string new_t = t.substr(tmpP.size()+1, t.size() - tmpP.size());
-        std::string new_name = new_t.substr(0, new_t.size()-4);
-        LoadScript(new_name, new_t);
-    }*/
 };
 
 void ScriptsManager::Shutdown()

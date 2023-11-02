@@ -59,6 +59,7 @@ void ECS::setPosition(EntityID e, m_Types::vec3 v)
 	this->Get<Position>(e).z += v.z;
 	this->Get<BoxCollider>(e).offset += v;
 }
+
 bool ECS::Collide(EntityID e, std::string tag)
 {
 	bool result = 0;
@@ -80,17 +81,13 @@ bool ECS::Collide(EntityID e, std::string tag)
 	return false;
 }
 bool ECS::BoxCollide(EntityID e1, EntityID e2) {
-	//std::cout << "Solve 1" << std::endl;
+	m_Types::vec2 m_size  = m_Types::vec2(90,90);
 	m_Types::vec3 c = this->Get<BoxCollider>(e1).offset;
-	m_Types::vec2 c_size = this->Get<BoxCollider>(e1).size;
+	m_Types::vec2 c_size = m_size;
 	m_Types::vec3 d = this->Get<BoxCollider>(e2).offset;
-	m_Types::vec2 d_size = this->Get<BoxCollider>(e2).size;
-	m_Types::vec3 tmp = this->Get<BoxCollider>(e1).offset;
-	c_size.x = 100;
-	c_size.y = 100;
-	d_size.x = 100;
-	d_size.y = 100;
-	std::cout << "CX: " << c.x << std::endl;
+	m_Types::vec2 d_size = m_size;
+	m_Types::vec3 tmp = m_Types::vec3(0, 0, 0);
+	/*std::cout << "CX: " << c.x << std::endl;
 	std::cout << "CY: " << c.y << std::endl;
 	std::cout << "C_Size.X: " << c_size.x << std::endl;
 	std::cout << "C_Size.Y: " << c_size.y << std::endl;
@@ -105,34 +102,50 @@ bool ECS::BoxCollide(EntityID e1, EntityID e2) {
 	std::cout << "D-D_SizeX: " << (d.x - d_size.x) << std::endl;
 	std::cout << "D+D_SizeX: " << (d.x + d_size.x) << std::endl;
 	std::cout << "D-D_SizeY: " << (d.y - d_size.y) << std::endl;
-	std::cout << "D+D_SizeY: " << (d.y + d_size.y) << std::endl;
+	std::cout << "D+D_SizeY: " << (d.y + d_size.y) << std::endl;*/
 	bool result = false;
-	if (c.x < d.x && c.x + c_size.x > d.x - d_size.x) {
-		if (this->Get<BoxCollider>(e1).IsStatis) {
-			tmp.x = c.x + ((d.x - d_size.x) + (c.x + c_size.x));
+	/*if ((c.x <= d.x && c.x + c_size.x >= d.x - d_size.x || c.x >= d.x && c.x - c_size.x <= d.x + d_size.x)) {
+		std::cout << "x is true" << std::endl;
+	}
+	else {
+		std::cout << "x is false" << std::endl;
+	}
+	if ((c.y >= d.y && c.y - c_size.y <= d.y + d_size.y) || (c.y <= d.y && c.y + c_size.y >= d.y - d_size.y)) {
+		std::cout << "y is true" << std::endl;
+	}
+	else {
+		std::cout << "y is false" << std::endl;
+	}*/
+	if (((c.x <= d.x && c.x + c_size.x >= d.x - d_size.x || c.x >= d.x && c.x - c_size.x <= d.x + d_size.x)) &&
+		((c.y >= d.y && c.y - c_size.y <= d.y + d_size.y) || (c.y <= d.y && c.y + c_size.y >= d.y - d_size.y))) {
+		m_Types::vec3 tmptmp = m_Types::vec3(0, 0, 0);
+		if (this->Get<BoxCollider>(e1).IsStatis && c.x <= d.x && c.x + c_size.x >= d.x - d_size.x) {
+			tmptmp.x -= ((c.x + c_size.x) - (d.x - d_size.x));
+			result = true;
+		}else if (this->Get<BoxCollider>(e1).IsStatis && c.x >= d.x && c.x - c_size.x <= d.x + d_size.x) {
+			tmptmp.x -= ((c.x - c_size.x) - (d.x + d_size.x));
+			std::cout << "We are one" << std::endl;
 			result = true;
 		}
-	}else if(c.x > d.x && c.x - c_size.x < d.x + d_size.x) {
-		if (this->Get<BoxCollider>(e1).IsStatis) {
-			tmp.x = c.x + ((d.x + d_size.x) + (c.x - c_size.x));
+		if (this->Get<BoxCollider>(e1).IsStatis && c.y >= d.y && c.y - c_size.y <= d.y + d_size.y) {
+			tmptmp.y -= ((c.y - c_size.y) - (d.y + d_size.y));
 			result = true;
+		}else if (this->Get<BoxCollider>(e1).IsStatis && c.y <= d.y && c.y + c_size.y >= d.y - d_size.y) {
+			tmptmp.y -= ((c.y + c_size.y) - (d.y - d_size.y));
+			result = true;
+		}
+		if (std::abs(tmptmp.x) < std::abs(tmptmp.y)) {
+			tmp.x = tmptmp.x;
+		}
+		else  if (std::abs(tmptmp.x) > std::abs(tmptmp.y)) {
+			tmp.y = tmptmp.y;
+		}
+		else {
+			tmp.x = tmptmp.x;
+			tmp.y = tmptmp.y;
 		}
 	}
-	if (c.y > d.y && c.y - c_size.y < d.y + d_size.y) {
-		std::cout << "Solve:1 "<< std::endl;
-		if (this->Get<BoxCollider>(e1).IsStatis) {
-			tmp = this->Get<BoxCollider>(e1).offset;
-			result = true;
-		}
-
-	}else if (c.y < d.y &&  c.y + c_size.y > d.y - d_size.y) {
-		std::cout << "Solve:2" << std::endl;
-		if (this->Get<BoxCollider>(e1).IsStatis) {
-			tmp = this->Get<BoxCollider>(e1).offset;
-			result = true;
-		}
-		
-	}
+	
 	if (result) {
 		setPosition(e1, tmp);
 	}

@@ -41,14 +41,26 @@ void engine::Engine::e_StartUp(std::shared_ptr<engine::Engine> &e)
 	e_script->lua.set_function("GetSprite", [&](EntityID e) -> Sprite& { return ecs->Get<Sprite>(e); });
 	e_script->lua.set_function("SetHealth", [&](EntityID e, double p) {ecs->Get<Health>(e).percent = p; });
 	e_script->lua.set_function("SetPosition", [&](EntityID e, float x, float y, float z) {ecs->setPosition(e, m_Types::vec3(x, y, z)); });
+	e_script->lua.set_function("AddForce", [&](EntityID e, float force) {ecs->Get<Rigidbody>(e).force.y = 360 * ((9.8 + force * ecs->Get<Rigidbody>(e).f_weight) / ecs->Get<Rigidbody>(e).mass); ecs->Get<Rigidbody>(e).f_weight -= 1.0f / 3600.0f; });
+	e_script->lua.set_function("AddVelocity", [&](EntityID e, float x, float y, float z) {
+		ecs->Get<Rigidbody>(e).velocity.x = x;
+		ecs->Get<Rigidbody>(e).velocity.y = y; 
+		ecs->Get<Rigidbody>(e).velocity.z = z;
+		});
 	
-	e_script->lua.set_function("SetScale", [&](EntityID e, float x, float y) {ecs->Get<Sprite>(e).scale.x = x; ecs->Get<Sprite>(e).scale.y += y;});
+	e_script->lua.set_function("SetScale", [&](EntityID e, float x, float y, float z) {ecs->Get<Sprite>(e).scale.x = x; ecs->Get<Sprite>(e).scale.y += y; ecs->Get<Sprite>(e).scale.z = z; });
 	e_script->lua.set_function("Collide", [&](EntityID e, std::string tag) {return ecs->Collide(e, tag); });
 	e_script->lua.set_function("AddRigidBody", [&](EntityID e) {
 		ecs->Get<Rigidbody>(e).active = true;
+		ecs->Get<Rigidbody>(e).gravity = true;
 		ecs->Get<Rigidbody>(e).mass = 1;
 		ecs->Get<Rigidbody>(e).velocity = vec3(0,0,0);
-		ecs->Get<Rigidbody>(e).meters_per_second = -0.0011;
+		ecs->Get<Rigidbody>(e).force = vec3(0, 0, 0);
+		ecs->Get<Rigidbody>(e).meters_per_second = -9.8 * 360;
+		ecs->Get<Rigidbody>(e).f_weight = 1.0f;
+		});
+	e_script->lua.set_function("setActiveGravity", [&](EntityID e, bool activeCode) {
+		ecs->Get<Rigidbody>(e).gravity = activeCode;
 		});
 	e_script->lua.set_function("AddScript", [&](EntityID e, const std::string name){addScript(e, name); });
 	e_script->lua.set_function("GetScript", [&](EntityID e) -> Script& {return ecs->Get<Script>(e); });
@@ -88,7 +100,7 @@ void engine::Engine::e_ReunGameLoop(const e_UpdateCallback& callback)
     while (this->graphics->window_isRunning) {
 		
 		inputs->Update();
-		glfwWaitEvents();
+		//glfwWaitEvents();
 		//e_Update();
 		callback();
 		
@@ -159,29 +171,59 @@ void engine::Engine::EngineForEach()
 		}
 		}
 	);
-	ecs->ForEach<Sprite, Position, BoxCollider>([&](EntityID e) {
+	
+	int64_t m_test = 0;
+	ecs->ForEach<Sprite, Position, Rigidbody>([&](EntityID e) {
 		Sprite s = ecs->Get<Sprite>(e);
 		m_Types::vec3 s_position;
 		Rigidbody s_rigidbody = ecs->Get<Rigidbody>(e);
+		if (this->inputs->KeyIsPressed(this->graphics->window, GLFW_KEY_W, GLFW_RELEASE)) { ecs->Get<Rigidbody>(e).f_weight = 1.0f; }
 		bool result = false;
-		if (s.active && s_rigidbody.active) {
-			ecs->ForEach< Sprite, BoxCollider>([&](EntityID e1) {
-				if (s.EntityN != ecs->Get<Sprite>(e1).EntityN) {
-					//std::cout << "Problem: " << ecs->Get<Sprite>(e1).EntityN << std::endl;
-					result = ecs->BoxCollide(e, e1);
-					std::cout << "Problem: " << result << std::endl;
-				}
-			});
-			s_position.x = s_rigidbody.velocity.x + DeltaTime;
-			s_position.z = s_rigidbody.velocity.z + DeltaTime;
-			s_position.y = (float)(0.5 * DeltaTime * DeltaTime * s_rigidbody.meters_per_second + DeltaTime * s_rigidbody.velocity.y);
-			ecs->setPosition(e, s_position);
-			if (ecs->Get<BoxCollider>(e).active) {
-				ecs->Get<BoxCollider>(e).offset = s_position;
+		if (s.active && s_rigidbody.active && s_rigidbody.velocity.y == 0) {
+			s_position.x = s_rigidbody.velocity.x * DeltaTime;
+			s_position.z = s_rigidbody.velocity.z * DeltaTime;
+			s_position.y = (float)(DeltaTime * s_rigidbody.velocity.y + (DeltaTime * DeltaTime *s_rigidbody.force.y*0.5));
+			std::cout << s.position.y << std::endl;
+			if (s_rigidbody.gravity) {
+				
+				s_position.y += (float)(0.5 * s_rigidbody.meters_per_second * DeltaTime * DeltaTime);
+				
 			}
-			
+
+			ecs->setPosition(e, s_position);
 		}
-		});
+		ecs->ForEach< Sprite, BoxCollider>([&](EntityID e1) {
+			if (s.EntityN != ecs->Get<Sprite>(e1).EntityN && m_test <= e1) {
+
+				result = ecs->BoxCollide(e, e1);
+				//std::cout << "Problem: " << result << std::endl;
+			}
+			});
+		//m_test++;
+		//Deacceleration
+
+		if (ecs->Get<Rigidbody>(e).force.y-60 < 0) {
+			ecs->Get<Rigidbody>(e).force.y = 0;
+		}
+		else {
+			ecs->Get<Rigidbody>(e).force.y -= 60;
+		}
+		if (ecs->Get<Rigidbody>(e).velocity.x - 0.1 < 0) {
+			ecs->Get<Rigidbody>(e).velocity.x = 0;
+		}
+		else {
+			ecs->Get<Rigidbody>(e).velocity.x -= 0.1;
+		}
+		if (ecs->Get<Rigidbody>(e).velocity.y - 0.1 < 0) {
+			ecs->Get<Rigidbody>(e).velocity.y = 0;
+		}
+		else {
+			ecs->Get<Rigidbody>(e).velocity.y -= 0.1;
+		}
+		
+		}
+	);
+	m_test = 0;
 	ecs->ForEach<Sprite, Health>([&](EntityID e) {
 
 		if (ecs->Get<Health>(e).percent < 0 && ecs->Get<Health>(e).percent != DBL_MIN) {
@@ -220,6 +262,7 @@ void engine::Engine::EngineForEach()
 		}
 		}
 	);
+
 }
 void engine::Engine::addScript(EntityID e, const std::string name)
 {

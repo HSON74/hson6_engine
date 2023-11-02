@@ -65,6 +65,8 @@ struct Rigidbody {
     bool active;
     bool gravity;
     long mass;
+    float f_weight;
+    m_Types::vec3 force;
     m_Types::real meters_per_second = -9.8;
     m_Types::vec3 velocity;
     m_Types::vec3 AngularVelocity;
