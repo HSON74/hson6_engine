@@ -5,7 +5,7 @@
 class GUIManager {
 public:
 	GUIManager() = default;
-	void Startup();
+	void Startup(GLFWwindow* w);
 	void Shutdown();
 	void Draw();
 };

@@ -10,6 +10,9 @@ ECS::ECS()
 {
 	
 }
+void ECS::Shutdown() {
+	this->environmentManipulation.clear();
+}
 
 EntityID ECS::Create(std::string m_name, std::string m_path)
 {

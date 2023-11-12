@@ -28,12 +28,13 @@ class ECS
 {
 public:
 	std::unordered_map< ComponentIndex, std::unique_ptr< SparseSetHolder > > m_components;
+	std::vector<EntityID> environmentManipulation;
 	template< typename T > T& Get(EntityID e);
 	EntityID sizeEntity = 0;
 	ECS();
 	//Create a Entity
 	EntityID Create(std::string m_name, std::string m_path);
-
+	void Shutdown();
 	//Get the Entity with compnenets. 
 	template< typename T >
 	std::unordered_map< EntityID, T >&

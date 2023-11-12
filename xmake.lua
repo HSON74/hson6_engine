@@ -57,9 +57,10 @@ target("hson6_engine")
     add_packages("soloud", {public = true})
     add_packages("lua")
     add_packages("sol2", {public = true})
-    add_packages("imgui", {public = true})
+    add_packages("imgui")
     set_kind("static")
     set_languages("cxx20")
+
 
     -- Declare our engine's header path.
     -- This allows targets that depend on the engine to #include them.

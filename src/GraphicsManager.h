@@ -2,7 +2,7 @@
 
 #include "Types.h"
 #include "ResourceManager.h"
-#include "GUIManager.h"
+
 
 
 struct HUYSONSOMETHING {
@@ -45,6 +45,7 @@ public:
     std::vector<Sprite> sprites;
     std::unordered_map<std::string, HUYSONSOMETHING> g_tex;
     std::shared_ptr<ResourceManager> resources;
+    
 
     bool window_isRunning;
     void g_StartUp();

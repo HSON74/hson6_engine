@@ -12,6 +12,12 @@ add_executable(helloworld "")
 set_target_properties(helloworld PROPERTIES OUTPUT_NAME "helloworld")
 set_target_properties(helloworld PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build/windows/x64/release")
 add_dependencies(helloworld illengine)
+
+add_subdirectory(imgui)
+
+# [...]
+
+target_link_libraries(App PRIVATE glfw webgpu glfw3webgpu imgui)
 target_include_directories(helloworld PRIVATE
     src
 )
@@ -90,9 +96,43 @@ target_sources(helloworld PRIVATE
 )
 
 # target
+
 add_library(illengine STATIC "")
+# Define an ImGui target that fits our use case
+add_library(imgui STATIC
+    # Among the different backends available, we are interested in connecting
+    # the GUI to GLFW andWebGPU:
+    backends/imgui_impl_wgpu.h
+    backends/imgui_impl_wgpu.cpp
+    backends/imgui_impl_glfw.h
+    backends/imgui_impl_glfw.cpp
+
+    # Bonus to add some C++ specific features (the core ImGUi is a C library)
+    misc/cpp/imgui_stdlib.h
+    misc/cpp/imgui_stdlib.cpp
+
+    # The core ImGui files
+    imconfig.h
+    imgui.h
+    imgui.cpp
+    imgui_draw.cpp
+    imgui_internal.h
+    imgui_tables.cpp
+    imgui_widgets.cpp
+    imstb_rectpack.h
+    imstb_textedit.h
+    imstb_truetype.h
+)
+target_include_directories(imgui PUBLIC .)
+target_link_libraries(imgui PUBLIC webgpu glfw)
+
 set_target_properties(illengine PROPERTIES OUTPUT_NAME "illengine")
 set_target_properties(illengine PROPERTIES ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build/windows/x64/release")
+add_subdirectory(imgui)
+
+# [...]
+
+target_link_libraries(App PRIVATE glfw webgpu glfw3webgpu imgui)
 target_include_directories(illengine PRIVATE
     src
 )
@@ -112,6 +152,7 @@ target_include_directories(illengine PRIVATE
     C:/Users/14423/AppData/Local/.xmake/packages/s/stb/2023.01.30/87edd883faeb4b168400e7458251d335/include
     C:/Users/14423/AppData/Local/.xmake/packages/s/stb/2023.01.30/87edd883faeb4b168400e7458251d335/include/stb
 )
+
 target_compile_definitions(illengine PRIVATE
     GLFW_INCLUDE_NONE
 )
@@ -166,6 +207,7 @@ target_link_directories(illengine PRIVATE
     C:/Users/14423/AppData/Local/.xmake/packages/w/wgpu-native/v0.17.0+2/449bbe26b0ba466ba594e179158e4caa/lib
     C:/Users/14423/AppData/Local/.xmake/packages/g/glfw3webgpu/v1.0.1/1c77c5c3103d464ab63a5728bb543411/lib
     C:/Users/14423/AppData/Local/.xmake/packages/s/soloud/2020.02.07/512314fd5727407eae3700844140601d/lib
+
 )
 target_sources(illengine PRIVATE
     src/Engine.cpp
@@ -175,4 +217,5 @@ target_sources(illengine PRIVATE
     src/ResourceManager.cpp
     src/SoundManager.cpp
 )
+
 

@@ -277,7 +277,6 @@ GraphicsManager::GraphicsManager()
     window_name = "Huy Son's Version 1 Engine";
     window_fullscreen = false;
     resources = std::make_shared<ResourceManager>();
-    
 };
 
 
