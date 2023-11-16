@@ -85,6 +85,7 @@ bool ScriptsManager::LoadScript(const std::string& name, const std::string& path
 {
    // std::tmpName = name + 
 	if (ScriptMap.count(name) != 0) {
+        std::cout << name << " is not added" << std::endl;
 		return false;
 	}
     

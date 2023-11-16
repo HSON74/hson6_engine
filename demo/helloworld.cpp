@@ -13,7 +13,6 @@ int main(int argc, const char *argv[])
         // code that will run inside the game loop
         h->UserInput(h);
         h->graphics->resize();
-        h->EngineForEach();
         
     });
 

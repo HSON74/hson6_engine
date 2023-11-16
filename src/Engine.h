@@ -22,6 +22,10 @@ namespace engine
         std::shared_ptr<ECS> ecs;
         std::shared_ptr<GUIManager> gui;
         bool u_result = false;
+
+        bool isPlay = false;
+        bool isPlayMode = false;
+
         
 
         //virtual std::function<Engine> 

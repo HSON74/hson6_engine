@@ -12,6 +12,11 @@ ECS::ECS()
 }
 void ECS::Shutdown() {
 	this->environmentManipulation.clear();
+	this->ForEach<Sprite>([&](EntityID e) {
+		this->Destroy(e);
+		});
+	if (!this->m_components.empty()) { this->m_components.clear(); }
+	
 }
 
 EntityID ECS::Create(std::string m_name, std::string m_path)
@@ -29,20 +34,8 @@ EntityID ECS::Create(std::string m_name, std::string m_path)
 	this->Get<Sprite>(old).z_value = 10;
 	this->Get<Health>(old).percent = DBL_MIN;
 	this->Get<Sprite>(old).imagePath = ecsr->pathToString(ecsr->getCurrentPath() / ecsr->stringToPath("assets") / ecsr->stringToPath(m_path));
-	if (!m_path.empty()) {
-		int width, height, channels;
-		unsigned char* data = stbi_load(this->Get<Sprite>(old).imagePath.c_str(), &width, &height, &channels, 4);
-		this->Get<BoxCollider>(old).size = m_Types::vec3(width, height, 0);
-		this->Get<BoxCollider>(old).offset = m_Types::vec3(0, 0, 0);
-		stbi_image_free(data);
-		
-
-	}
-	else {
-		this->Get<BoxCollider>(old).size = m_Types::vec3(100, 100, 100);
-		this->Get<BoxCollider>(old).offset = m_Types::vec3(0, 0, 0);
-
-	}
+	this->Get<BoxCollider>(old).size = m_Types::vec3(100, 100, 100);
+	this->Get<BoxCollider>(old).offset = m_Types::vec3(0, 0, 0);
 	this->Get<BoxCollider>(old).active = true;
 	this->Get<BoxCollider>(old).IsStatis = true;
 	this->Get<Sprite>(old).active = true;
@@ -50,8 +43,6 @@ EntityID ECS::Create(std::string m_name, std::string m_path)
 	this->Get<Position>(old).x = 0;
 	this->Get<Position>(old).y = 0;
 	this->Get<Position>(old).z = 0;
-	//std::cout << this->Get<Sprite>(old).imageName << std::endl;
-	//std::cout << this->Get<Sprite>(old).imagePath << std::endl;
 	return old;
 }
 void ECS::setPosition(EntityID e, m_Types::vec3 v)
@@ -86,9 +77,9 @@ bool ECS::Collide(EntityID e, std::string tag)
 bool ECS::BoxCollide(EntityID e1, EntityID e2) {
 	m_Types::vec2 m_size  = m_Types::vec2(90,90);
 	m_Types::vec3 c = this->Get<BoxCollider>(e1).offset;
-	m_Types::vec2 c_size = m_size;
+	m_Types::vec2 c_size = this->Get<BoxCollider>(e1).size;
 	m_Types::vec3 d = this->Get<BoxCollider>(e2).offset;
-	m_Types::vec2 d_size = m_size;
+	m_Types::vec2 d_size = this->Get<BoxCollider>(e2).size;;
 	m_Types::vec3 tmp = m_Types::vec3(0, 0, 0);
 	/*std::cout << "CX: " << c.x << std::endl;
 	std::cout << "CY: " << c.y << std::endl;
@@ -122,18 +113,18 @@ bool ECS::BoxCollide(EntityID e1, EntityID e2) {
 	if (((c.x <= d.x && c.x + c_size.x >= d.x - d_size.x || c.x >= d.x && c.x - c_size.x <= d.x + d_size.x)) &&
 		((c.y >= d.y && c.y - c_size.y <= d.y + d_size.y) || (c.y <= d.y && c.y + c_size.y >= d.y - d_size.y))) {
 		m_Types::vec3 tmptmp = m_Types::vec3(0, 0, 0);
-		if (this->Get<BoxCollider>(e1).IsStatis && c.x <= d.x && c.x + c_size.x >= d.x - d_size.x) {
+		if (c.x <= d.x && c.x + c_size.x >= d.x - d_size.x) {
 			tmptmp.x -= ((c.x + c_size.x) - (d.x - d_size.x));
 			result = true;
-		}else if (this->Get<BoxCollider>(e1).IsStatis && c.x >= d.x && c.x - c_size.x <= d.x + d_size.x) {
+		}else if (c.x >= d.x && c.x - c_size.x <= d.x + d_size.x) {
 			tmptmp.x -= ((c.x - c_size.x) - (d.x + d_size.x));
-			std::cout << "We are one" << std::endl;
+			//std::cout << "We are one" << std::endl;
 			result = true;
 		}
-		if (this->Get<BoxCollider>(e1).IsStatis && c.y >= d.y && c.y - c_size.y <= d.y + d_size.y) {
+		if (c.y >= d.y && c.y - c_size.y <= d.y + d_size.y) {
 			tmptmp.y -= ((c.y - c_size.y) - (d.y + d_size.y));
 			result = true;
-		}else if (this->Get<BoxCollider>(e1).IsStatis && c.y <= d.y && c.y + c_size.y >= d.y - d_size.y) {
+		}else if (c.y <= d.y && c.y + c_size.y >= d.y - d_size.y) {
 			tmptmp.y -= ((c.y + c_size.y) - (d.y - d_size.y));
 			result = true;
 		}
@@ -149,8 +140,23 @@ bool ECS::BoxCollide(EntityID e1, EntityID e2) {
 		}
 	}
 	
-	if (result) {
+	if (result && !(this->Get<BoxCollider>(e1).IsTrigger)) {
 		setPosition(e1, tmp);
 	}
 	return result;
+}
+bool ECS::CheckBoxCollide(EntityID e1, EntityID e2) {
+	m_Types::vec2 m_size = m_Types::vec2(90, 90);
+	m_Types::vec3 c = this->Get<BoxCollider>(e1).offset;
+	m_Types::vec2 c_size = this->Get<BoxCollider>(e1).size;
+	m_Types::vec3 d = this->Get<BoxCollider>(e2).offset;
+	m_Types::vec2 d_size = this->Get<BoxCollider>(e2).size;;
+	m_Types::vec3 tmp = m_Types::vec3(0, 0, 0);
+	bool check_result = false;
+
+	if (((c.x <= d.x && c.x + c_size.x >= d.x - d_size.x || c.x >= d.x && c.x - c_size.x <= d.x + d_size.x)) &&
+		((c.y >= d.y && c.y - c_size.y <= d.y + d_size.y) || (c.y <= d.y && c.y + c_size.y >= d.y - d_size.y))) {
+		check_result = true;
+	}
+	return check_result;
 }

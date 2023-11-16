@@ -78,6 +78,7 @@ struct Camera {
 struct Collider {
     bool active;
     bool IsStatis = true;
+    bool IsTrigger = false;
     m_Types::vec3 offset; //Center
 };
 struct BoxCollider : Collider {
