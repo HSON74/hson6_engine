@@ -29,7 +29,8 @@ EntityID ECS::Create(std::string m_name, std::string m_path)
 	oss << this->Get<Sprite>(old).EntityN;
 	tmp += oss.str();
 	this->Get<Sprite>(old).imageName = tmp;
-	this->Get<Sprite>(old).position = m_Types::vec3(0, 0, 90);
+	this->Get<Sprite>(old).position = m_Types::vec3(0, 0, 0);
+	this->Get<Sprite>(old).rotation = m_Types::vec3(0, 0, 45);
 	this->Get<Sprite>(old).scale = m_Types::vec3(1, 1,1);
 	this->Get<Sprite>(old).z_value = 10;
 	this->Get<Health>(old).percent = DBL_MIN;

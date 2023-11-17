@@ -26,7 +26,7 @@ namespace {
     struct InstanceData {
         glm::vec3 translation;
         glm::vec3 scale;
-       // glm::vec3 rotation;
+        glm::vec3 rotation;
     };
     struct Uniforms {
         mat4 projection;
@@ -141,6 +141,7 @@ struct VertexInput {
     @location(1) texcoords: vec2f,
     @location(2) translation: vec3f,
     @location(3) scale: vec3f,
+    @location(4) rotation: vec3f,
 };
 
 struct VertexOutput {
@@ -152,6 +153,7 @@ struct VertexOutput {
 fn vertex_shader_main( in: VertexInput ) -> VertexOutput {
     var out: VertexOutput;
     out.position = uniforms.projection * vec4f( vec3f( in.scale * in.position ) + in.translation, 1.0 );
+   
     out.texcoords = in.texcoords;
     return out;
 }
@@ -204,7 +206,7 @@ fn fragment_shader_main( in: VertexOutput ) -> @location(0) vec4f {
                     // This data is per-instance. All four vertices will get the same value. Each instance of drawing the vertices will get a different value.
                     // The type, byte offset, and stride (bytes between elements) exactly match the array of `InstanceData` structs we will upload in our draw function.
                     .stepMode = WGPUVertexStepMode_Instance,
-                    .attributeCount = 2,
+                    .attributeCount = 3,
                     .attributes = to_ptr<WGPUVertexAttribute>({
                     // Translation as a 3D vector.
                     {
@@ -217,6 +219,11 @@ fn fragment_shader_main( in: VertexOutput ) -> @location(0) vec4f {
                             .format = WGPUVertexFormat_Float32x2,
                             .offset = offsetof(InstanceData, scale),
                             .shaderLocation = 3
+                        },
+                        {
+                            .format = WGPUVertexFormat_Float32x2,
+                            .offset = offsetof(InstanceData, rotation),
+                            .shaderLocation = 4
                         }
                         })
                 }
@@ -454,42 +461,18 @@ void GraphicsManager::Draw(std::vector<Sprite>& sprites) {
             Sprite s = sprites.at(i);
 
            d.translation = vec3((float)((float)s.position.x), (float)((float)s.position.y), (float)s.position.z);
-
+           
            d.scale = vec3(s.scale.x * 100, s.scale.y * 100, s.scale.z*100);
-           glm::mat4 R = { {1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1} };
-           for (int a = 0; a < 3; a++) {
-               glm::mat4 I = { {1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1} };
-               float x = 0 / (float)std::sqrt(1);
-               float y = 0 / (float)std::sqrt(1);
-               float z = 0 / (float)std::sqrt(1);
-               
-               float c; 
-               float g; 
-               float angle_x = (float)(s.rotation.x * 3.14) / 180.0f;
-               float angle_y = (float)(s.rotation.y * 3.14) / 180.0f;
-               float angle_z = (float)(s.rotation.z * 3.14) / 180.0f;
-               if (a == 0) {
-                   x = 1 / (float)std::sqrt(1);
-                   c = std::cos(angle_x);
-                   g = std::sin(angle_x);
-               }
-               else if (a == 1) {
-                   y = 1 / (float)std::sqrt(1);
-                   c = std::cos(angle_y);
-                   g = std::sin(angle_y);
-               }
-               else if (a == 2) {
-                   z = 1 / (float)std::sqrt(1);
-                   c = std::cos(angle_z); 
-                   g = std::sin(angle_z);
-               }
-               I[0][0] = x * x * (1 - c) + c;	 I[0][1] = x * y * (1 - c) - z * g;		I[0][2] = x * z * (1 - c) + y * g;
-               I[1][0] = y * x * (1 - c) + z * g;	 I[1][1] = y * y * (1 - c) + c;		I[1][2] = y * z * (1 - c) - x * g;
-               I[2][0] = z * x * (1 - c) - y * g;	 I[2][1] = z * y * (1 - c) + x * g;		I[2][2] = z * z * (1 - c) + c;
-               R = multmatrix(R, I);
-           }
-           d.scale = vec3(s.scale.x * 100 * R[0][0], s.scale.y * 100* R[1][1], s.scale.z * 100 * R[2][2]);
-           // d.scale = vec3(m_scale.x * 100, m_scale.y * 100, s.scale.z * 100);
+          
+           float angle_x = (float)(s.rotation.x * 3.14) / 180.0f;
+           float angle_y = (float)(s.rotation.y * 3.14) / 180.0f;
+           float angle_z = (float)(s.rotation.z * 3.14) / 180.0f;
+           glm::mat4 R = { {cos(angle_z),sin(angle_z),0,0},
+                            { -sin(angle_z),cos(angle_z),0,0},
+                            {0,0,1,0},
+                            {0,0,0,1}};
+           glm::vec4 ttc = R * glm::vec4(s.scale.x * 100, s.scale.y * 100, s.scale.z * 100, 1);
+           d.rotation = vec3(ttc.x, ttc.y, ttc.z);
             wgpuQueueWriteBuffer(queue, instance_buffer, i * sizeof(InstanceData), &d, sizeof(InstanceData));
 
             auto layout = wgpuRenderPipelineGetBindGroupLayout(pipeline, 0);

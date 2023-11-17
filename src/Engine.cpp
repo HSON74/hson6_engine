@@ -53,7 +53,7 @@ void engine::Engine::e_StartUp(std::shared_ptr<engine::Engine> &e)
 	e_script->lua.set_function("SetHealth", [&](EntityID e, double p) {ecs->Get<Health>(e).percent = p; });
 	e_script->lua.set_function("SetPosition", [&](EntityID e, float x, float y, float z) {ecs->setPosition(e, m_Types::vec3(x, y, z)); });
 	e_script->lua.set_function("AddForce", [&](EntityID e, float force) {
-		ecs->Get<Rigidbody>(e).force.y = (float)(360 * ((9.8 + force * ecs->Get<Rigidbody>(e).f_weight)) / ecs->Get<Rigidbody>(e).mass); 
+		ecs->Get<Rigidbody>(e).force.y = (float)(360 * (((9.8 + force) * ecs->Get<Rigidbody>(e).f_weight)) / ecs->Get<Rigidbody>(e).mass);
 		ecs->Get<Rigidbody>(e).f_weight -= (float)(1.0f / 3600.0f);
 	});
 	e_script->lua.set_function("AddVelocity", [&](EntityID e, float x, float y, float z) {
@@ -65,9 +65,9 @@ void engine::Engine::e_StartUp(std::shared_ptr<engine::Engine> &e)
 		ecs->Get<Sprite>(e).scale.x = x; 
 		ecs->Get<Sprite>(e).scale.y = y; 
 		ecs->Get<Sprite>(e).scale.z = z; 
-		ecs->Get<BoxCollider>(e).size.x = x * 0.01f;
-		ecs->Get<BoxCollider>(e).size.y = y * 0.01f;
-		ecs->Get<BoxCollider>(e).size.z = z * 0.01f;
+		ecs->Get<BoxCollider>(e).size.x = x * 100.f;
+		ecs->Get<BoxCollider>(e).size.y = y * 100.f;
+		ecs->Get<BoxCollider>(e).size.z = z * 100.f;
 		});
 	e_script->lua.set_function("Collide", [&](EntityID e, std::string tag) {return ecs->Collide(e, tag); });
 	e_script->lua.set_function("AddRigidBody", [&](EntityID e) {
@@ -78,6 +78,9 @@ void engine::Engine::e_StartUp(std::shared_ptr<engine::Engine> &e)
 		ecs->Get<Rigidbody>(e).force = vec3(0, 0, 0);
 		ecs->Get<Rigidbody>(e).meters_per_second = -9.8 * 360;
 		ecs->Get<Rigidbody>(e).f_weight = 1.0f;
+		ecs->Get<Rigidbody>(e).canToggle = false;
+		ecs->Get<Rigidbody>(e).toggle = 0.0f;
+
 		});
 	e_script->lua.set_function("setActiveGravity", [&](EntityID e, bool activeCode) {
 		ecs->Get<Rigidbody>(e).gravity = activeCode;
@@ -107,7 +110,7 @@ void engine::Engine::e_StartUp(std::shared_ptr<engine::Engine> &e)
 	});
 	e_script->lua.set_function("EAddForce", [&](float force) {
 		for (int i = 0; i < ecs->environmentManipulation.size(); i++) {
-			ecs->Get<Rigidbody>(ecs->environmentManipulation.at(i)).force.y = -1 * (float)(360 * ((9.8 + force * ecs->Get<Rigidbody>(ecs->environmentManipulation.at(i)).f_weight)) / ecs->Get<Rigidbody>(ecs->environmentManipulation.at(i)).mass);
+			ecs->Get<Rigidbody>(ecs->environmentManipulation.at(i)).force.y = -1 * (float)(360 * (((9.8 + force) * ecs->Get<Rigidbody>(ecs->environmentManipulation.at(i)).f_weight)) / ecs->Get<Rigidbody>(ecs->environmentManipulation.at(i)).mass);
 			ecs->Get<Rigidbody>(ecs->environmentManipulation.at(i)).f_weight -= (float)(1.0f / 3600.0f);
 		}
 		
@@ -143,9 +146,19 @@ void engine::Engine::e_StartUp(std::shared_ptr<engine::Engine> &e)
 	e_script->lua.set_function("KeyIsDown", [&](const int keycode) { return GetKeyDown(keycode); });
 	e_script->lua.set_function("Quit", [&]() {e->graphics->ShouldQuit(); });
 	//Sound
-    e_script->LoadScript("CoinCollect", "CoinCollect");	
-	std::string b = "CoinCollect";
-	e_script->ScriptMap[b]();
+
+	bool isTest = true;
+	if (isTest) {
+		e_script->LoadScript("Test", "Test");
+		std::string b = "Test";
+		e_script->ScriptMap[b]();
+	}
+	else {
+		e_script->LoadScript("CoinCollect", "CoinCollect");
+		std::string b = "CoinCollect";
+		e_script->ScriptMap[b]();
+	}
+  
 	//e_my_function();
 	
 }
@@ -285,16 +298,18 @@ void engine::Engine::EngineForEach()
 						u_result = this->ecs->CheckBoxCollide(e, this->ecs->environmentManipulation.at(i));
 					}
 				}
+
 			}
 			m_Types::vec3 m_tmp = m_Types::vec3(0, 0, 0);
 			if (u_result) {
 				for (int i = 0; i < this->ecs->environmentManipulation.size(); i++) {
 					EntityID e = this->ecs->environmentManipulation.at(i);
+					float m_gravity = 360 * ((9.8f * ecs->Get<Rigidbody>(e).f_weight)) / ecs->Get<Rigidbody>(e).mass;
 					m_Types::vec3 s_position;
 					Rigidbody s_rigidbody = this->ecs->Get<Rigidbody>(e);
 					s_position.x = s_rigidbody.velocity.x * DeltaTime;
 					s_position.z = s_rigidbody.velocity.z * DeltaTime;
-					s_position.y = (float)(DeltaTime * s_rigidbody.velocity.y + (DeltaTime * DeltaTime * s_rigidbody.force.y * 0.5));
+					s_position.y = (float)(DeltaTime * s_rigidbody.velocity.y + (DeltaTime * DeltaTime * (s_rigidbody.force.y - m_gravity) * 0.5));
 					this->ecs->setPosition(e, s_position);
 				}
 				for (int i = 0; i < this->ecs->environmentManipulation.size(); i++) {
@@ -302,6 +317,7 @@ void engine::Engine::EngineForEach()
 					m_Types::vec2 c_size = this->ecs->Get<BoxCollider>(e).size;
 					m_Types::vec3 d = this->ecs->Get<BoxCollider>(this->ecs->environmentManipulation.at(i)).offset;
 					m_Types::vec2 d_size = this->ecs->Get<BoxCollider>(this->ecs->environmentManipulation.at(i)).size;
+					m_Types::vec3 tmp = m_Types::vec3(0, 0, 0);
 					if (((c.x <= d.x && c.x + c_size.x >= d.x - d_size.x || c.x >= d.x && c.x - c_size.x <= d.x + d_size.x)) &&
 						((c.y >= d.y && c.y - c_size.y <= d.y + d_size.y) || (c.y <= d.y && c.y + c_size.y >= d.y - d_size.y))) {
 						m_Types::vec3 tmptmp = m_Types::vec3(0, 0, 0);
@@ -322,25 +338,18 @@ void engine::Engine::EngineForEach()
 							u_result = true;
 						}
 						if (std::abs(tmptmp.x) < std::abs(tmptmp.y)) {
-							if (std::abs(m_tmp.x) > std::abs(tmptmp.x)) {
-								m_tmp.x = tmptmp.x;
-							}
-
+							m_tmp.x = tmptmp.x;
+							
 						}
-						else  if (std::abs(tmptmp.x) > std::abs(tmptmp.y)) {
-							if (std::abs(m_tmp.y) > std::abs(tmptmp.y)) {
-								m_tmp.y = tmptmp.y;
-							}
+						else if (std::abs(tmptmp.x) > std::abs(tmptmp.y)) {
+							m_tmp.y = tmptmp.y;
 						}
-						else {
-							if (std::abs(m_tmp.x) > std::abs(tmptmp.x)) {
-								m_tmp.x = tmptmp.x;
-							}
-							if (std::abs(m_tmp.y) > std::abs(tmptmp.y)) {
-								m_tmp.y = tmptmp.y;
-							}
-						}
-						std::cout << "Collide here" << std::endl;
+					}
+					if (std::abs(m_tmp.x) > std::abs(tmp.x)) {
+						m_tmp.x = tmp.x;
+					}
+					else if (std::abs(m_tmp.y) > std::abs(tmp.y)) {
+						m_tmp.y = tmp.y;
 					}
 
 				}
