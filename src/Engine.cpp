@@ -354,7 +354,10 @@ void engine::Engine::EngineForEach()
 
 				}
 				for (int i = 0; i < this->ecs->environmentManipulation.size(); i++) {
-					this->ecs->setPosition(this->ecs->environmentManipulation.at(i), m_tmp);
+					if (!(this->ecs->Get<BoxCollider>(this->ecs->environmentManipulation.at(i)).IsTrigger)) {
+						this->ecs->setPosition(this->ecs->environmentManipulation.at(i), m_tmp);
+					}
+					
 				}
 			}
 			else {
