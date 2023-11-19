@@ -12,6 +12,7 @@ function update()
 		EAddVelocity(0, -10, 0)
 	end
 	--Future: Update the collide to take tag
+	
 end
 
 update()

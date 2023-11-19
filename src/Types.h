@@ -57,9 +57,14 @@ struct Sprite {
     m_Types:: vec3 scale;
     m_Types::real z_value;
     m_Types::vec2 size;
+    int UI_location;
     bool active;
     bool in_active;
     std::string tag;
+};
+struct UI {
+    std::string text;
+    std::string tex_text;
 };
 struct Rigidbody {
     bool active;

@@ -161,3 +161,29 @@ bool ECS::CheckBoxCollide(EntityID e1, EntityID e2) {
 	}
 	return check_result;
 }
+void ECS::CreateUI(std::string m_name)
+{
+	EntityID old = this->sizeEntity++;
+	this->Get<Sprite>(old).imageName = m_name;
+	this->Get<Sprite>(old).EntityN = old;
+	this->Get<Sprite>(old).tag = "UI";
+	this->Get<Sprite>(old).imageName = m_name;
+	this->Get<Sprite>(old).position = m_Types::vec3(0, 0, 0);
+	this->Get<Sprite>(old).rotation = m_Types::vec3(0, 0, 0);
+	this->Get<Sprite>(old).scale = m_Types::vec3(1, 1, 1);
+	this->Get<Sprite>(old).z_value = 10;
+	this->Get<Health>(old).percent = DBL_MIN;
+	this->Get<Sprite>(old).active = true;
+	this->Get<Sprite>(old).in_active = false;
+	this->Get<Position>(old).x = 0;
+	this->Get<Position>(old).y = 0;
+	this->Get<Position>(old).z = 0;
+	this->Get<UI>(old).text = "";
+	this->Get<UI>(old).tex_text = "";
+}
+void ECS::ChangeText(EntityID e, std::string m_name)
+{
+	this->Get<UI>(e).text = m_name;
+	this->Get<UI>(e).tex_text = m_name;
+
+}

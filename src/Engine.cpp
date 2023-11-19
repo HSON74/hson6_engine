@@ -20,6 +20,9 @@ void engine::Engine::e_StartUp(std::shared_ptr<engine::Engine> &e)
 	//ECS
 	//Single Entities
 	e_script->lua.set_function("CreateObject", [&](const std::string name, const std::string path) {ecs->Create(name, path); });
+	e_script->lua.set_function("CreateUI", [&](const std::string name, const std::string path) {
+		ecs->CreateUI(name); 
+	});
 	e_script->lua.set_function("Destroy", [&](const EntityID e) {
 		auto& container = ecs->GetAppropriateSparseSet<Sprite>();
 		for (const auto& [entity, value] : container) {
@@ -70,6 +73,7 @@ void engine::Engine::e_StartUp(std::shared_ptr<engine::Engine> &e)
 		ecs->Get<BoxCollider>(e).size.z = z * 100.f;
 		});
 	e_script->lua.set_function("Collide", [&](EntityID e, std::string tag) {return ecs->Collide(e, tag); });
+	e_script->lua.set_function("CheckCollide", [&](EntityID e, EntityID e1) {return ecs->CheckBoxCollide(e, e1); });
 	e_script->lua.set_function("AddRigidBody", [&](EntityID e) {
 		ecs->Get<Rigidbody>(e).active = true;
 		ecs->Get<Rigidbody>(e).gravity = true;
@@ -100,6 +104,9 @@ void engine::Engine::e_StartUp(std::shared_ptr<engine::Engine> &e)
 		ecs->Get<Rigidbody>(ecs->sizeEntity - 1).meters_per_second = +9.8 * 360;
 		ecs->Get<Rigidbody>(ecs->sizeEntity - 1).f_weight = 1.0f;
 		ecs->Get<BoxCollider>(ecs->sizeEntity - 1).IsStatis = false;
+		});
+	e_script->lua.set_function("setActiveTrigger", [&](EntityID e, bool activeCode) {
+		ecs->Get<BoxCollider>(e).IsTrigger = activeCode;
 		});
 	e_script->lua.set_function("ESetPosition", [&](float x, float y, float z) {
 		for (int i = 0; i < ecs->environmentManipulation.size(); i++) {
@@ -142,13 +149,20 @@ void engine::Engine::e_StartUp(std::shared_ptr<engine::Engine> &e)
 		}
 		
 		});
+	e_script->lua.set_function("CreateUI", [&](std::string name) {
+		ecs->CreateUI(name);
+		ecs->Get<Sprite>(ecs->sizeEntity - 1).tag = "UI";
+		});
+	e_script->lua.set_function("UIUpdate", [&](EntityID e, std::string name) {
+		ecs->ChangeText(e, name);
+		});
 	//Engine
 	e_script->lua.set_function("KeyIsDown", [&](const int keycode) { return GetKeyDown(keycode); });
 	e_script->lua.set_function("Quit", [&]() {e->graphics->ShouldQuit(); });
 	//Sound
 
-	bool isTest = true;
-	if (isTest) {
+
+	if (is_Test) {
 		e_script->LoadScript("Test", "Test");
 		std::string b = "Test";
 		e_script->ScriptMap[b]();
@@ -159,7 +173,7 @@ void engine::Engine::e_StartUp(std::shared_ptr<engine::Engine> &e)
 		e_script->ScriptMap[b]();
 	}
   
-	//e_my_function();
+	e_my_function();
 	
 }
 void engine::Engine::addECSEnvironment(EntityID e) {
@@ -188,13 +202,13 @@ void engine::Engine::e_ReunGameLoop(const e_UpdateCallback& callback)
 		
 		inputs->Update();
 		//glfwWaitEvents();
-		//e_Update();
+		e_Update();
 		callback();
 		if (this->GetKeyDown(GLFW_KEY_P)) {
 			isPlay = !isPlay;
 		}
 		this->EngineForEach();
-		graphics->Draw(graphics->sprites);
+		graphics->Draw(graphics->sprites, graphics->UI_sprites);
 		
 		
 
@@ -254,11 +268,16 @@ void engine::Engine::EngineForEach()
 	ecs->ForEach<Sprite>([&](EntityID entity) {
 		Sprite& sprite = ecs->Get<Sprite>(entity);
 		ecs->Get<Sprite>(entity).position = ecs->Get<Position>(entity);
-
 		if (sprite.active && !sprite.in_active) {
-
+			
+			if (sprite.tag == "UI") {
+				this->graphics->UI_sprites.push_back(this->ecs->Get<UI>(sprite.EntityN));
+				sprite.UI_location = (int)this->graphics->UI_sprites.size() - 1;
+			}
+			else {
+				this->graphics->LoadImage(sprite.imageName, sprite.imagePath);
+			}
 			this->graphics->sprites.push_back(sprite);
-			this->graphics->LoadImage(sprite.imageName, sprite.imagePath);
 			ecs->Get<Sprite>(entity).in_active = true;
 		}
 		for (int m_s_i = 0; m_s_i < this->graphics->sprites.size(); m_s_i++) {
@@ -268,12 +287,17 @@ void engine::Engine::EngineForEach()
 			}
 		}
 		if (!sprite.active && sprite.in_active) {
-			for (int m_s_i = 0; m_s_i < this->graphics->sprites.size(); m_s_i++) {
-				if (ecs->Get<Sprite>(entity).EntityN == (this->graphics->sprites.at(m_s_i).EntityN)) {
-					std::string a = this->graphics->sprites.at(m_s_i).imageName;
-					this->graphics->g_tex[a].destoryit();
-					this->graphics->g_tex.erase(a);
-					this->graphics->sprites.erase(this->graphics->sprites.begin() + m_s_i);
+			if(sprite.tag == "UI") {
+				//Do somthing
+			}
+			else {
+				for (int m_s_i = 0; m_s_i < this->graphics->sprites.size(); m_s_i++) {
+					if (ecs->Get<Sprite>(entity).EntityN == (this->graphics->sprites.at(m_s_i).EntityN)) {
+						std::string a = this->graphics->sprites.at(m_s_i).imageName;
+						this->graphics->g_tex[a].destoryit();
+						this->graphics->g_tex.erase(a);
+						this->graphics->sprites.erase(this->graphics->sprites.begin() + m_s_i);
+					}
 				}
 			}
 			ecs->Get<Sprite>(entity).in_active = false;
@@ -286,7 +310,11 @@ void engine::Engine::EngineForEach()
 		bool result = false;
 		
 		this->ecs->ForEach<Sprite>([&](EntityID e) {
-			
+			u_result = false;
+			if (this->ecs->Get<Sprite>(e).tag == "UI") {
+				//std::cout << "Entity: " << this->ecs->Get<Sprite>(e).EntityN << " tag: " << this->ecs->Get<Sprite>(e).tag << std::endl;
+				return;
+			}
 			for (int i = 0; i < this->ecs->environmentManipulation.size(); i++) {
 				if (e == this->ecs->environmentManipulation.at(i)) {
 					result = true;
@@ -303,14 +331,14 @@ void engine::Engine::EngineForEach()
 			m_Types::vec3 m_tmp = m_Types::vec3(0, 0, 0);
 			if (u_result) {
 				for (int i = 0; i < this->ecs->environmentManipulation.size(); i++) {
-					EntityID e = this->ecs->environmentManipulation.at(i);
-					float m_gravity = 360 * ((9.8f * ecs->Get<Rigidbody>(e).f_weight)) / ecs->Get<Rigidbody>(e).mass;
+					EntityID e1 = this->ecs->environmentManipulation.at(i);
+					float m_gravity = 360 * ((9.8f * ecs->Get<Rigidbody>(e1).f_weight)) / ecs->Get<Rigidbody>(e1).mass;
 					m_Types::vec3 s_position;
-					Rigidbody s_rigidbody = this->ecs->Get<Rigidbody>(e);
+					Rigidbody s_rigidbody = this->ecs->Get<Rigidbody>(e1);
 					s_position.x = s_rigidbody.velocity.x * DeltaTime;
 					s_position.z = s_rigidbody.velocity.z * DeltaTime;
-					s_position.y = (float)(DeltaTime * s_rigidbody.velocity.y + (DeltaTime * DeltaTime * (s_rigidbody.force.y - m_gravity) * 0.5));
-					this->ecs->setPosition(e, s_position);
+					s_position.y = (float)(DeltaTime * s_rigidbody.velocity.y + (DeltaTime * DeltaTime * (s_rigidbody.force.y) * 0.5));
+					this->ecs->setPosition(e1, s_position);
 				}
 				for (int i = 0; i < this->ecs->environmentManipulation.size(); i++) {
 					m_Types::vec3 c = this->ecs->Get<BoxCollider>(e).offset;
@@ -321,57 +349,69 @@ void engine::Engine::EngineForEach()
 					if (((c.x <= d.x && c.x + c_size.x >= d.x - d_size.x || c.x >= d.x && c.x - c_size.x <= d.x + d_size.x)) &&
 						((c.y >= d.y && c.y - c_size.y <= d.y + d_size.y) || (c.y <= d.y && c.y + c_size.y >= d.y - d_size.y))) {
 						m_Types::vec3 tmptmp = m_Types::vec3(0, 0, 0);
+						
 						if (c.x <= d.x && c.x + c_size.x >= d.x - d_size.x) {
-							tmptmp.x -= ((c.x + c_size.x) - (d.x - d_size.x));
-							u_result = true;
+							tmptmp.x += ((c.x + c_size.x) - (d.x - d_size.x));
 						}
 						else if (c.x >= d.x && c.x - c_size.x <= d.x + d_size.x) {
-							tmptmp.x -= ((c.x - c_size.x) - (d.x + d_size.x));
-							u_result = true;
+							tmptmp.x += ((c.x - c_size.x) - (d.x + d_size.x));
 						}
 						if (c.y >= d.y && c.y - c_size.y <= d.y + d_size.y) {
-							tmptmp.y -= ((c.y - c_size.y) - (d.y + d_size.y));
-							u_result = true;
+							tmptmp.y += ((c.y - c_size.y) - (d.y + d_size.y));
 						}
 						else if (c.y <= d.y && c.y + c_size.y >= d.y - d_size.y) {
-							tmptmp.y -= ((c.y + c_size.y) - (d.y - d_size.y));
-							u_result = true;
+							tmptmp.y += ((c.y + c_size.y) - (d.y - d_size.y));
 						}
 						if (std::abs(tmptmp.x) < std::abs(tmptmp.y)) {
-							m_tmp.x = tmptmp.x;
-							
+							tmp.x = tmptmp.x;
 						}
 						else if (std::abs(tmptmp.x) > std::abs(tmptmp.y)) {
-							m_tmp.y = tmptmp.y;
+							tmp.y = tmptmp.y;
+						}
+						else {
+							tmp.x = tmptmp.x;
+							tmp.y = tmptmp.y;
+						}
+						if ((this->ecs->Get<BoxCollider>(this->ecs->environmentManipulation.at(i)).IsTrigger)) {
+							tmp = m_Types::vec3(0, 0, 0);
 						}
 					}
-					if (std::abs(m_tmp.x) > std::abs(tmp.x)) {
+					
+					
+					if ((std::abs(m_tmp.x) > std::abs(tmp.x) && tmp.x != 0) || m_tmp.x == 0) {
 						m_tmp.x = tmp.x;
 					}
-					else if (std::abs(m_tmp.y) > std::abs(tmp.y)) {
+					if ((std::abs(m_tmp.y) > std::abs(tmp.y) && tmp.y != 0) || m_tmp.y == 0) {
 						m_tmp.y = tmp.y;
 					}
 
 				}
+				//std::cout << "WE are one at the end with " << m_tmp.x << std::endl;
+				
 				for (int i = 0; i < this->ecs->environmentManipulation.size(); i++) {
-					if (!(this->ecs->Get<BoxCollider>(this->ecs->environmentManipulation.at(i)).IsTrigger)) {
+					bool s_check = false;
+					if (this->ecs->Get<Sprite>(this->ecs->environmentManipulation.at(i)).tag == "UI" || this->ecs->Get<Sprite>(this->ecs->environmentManipulation.at(i)).tag == "Background") {
+						s_check = true;
+					}
+					if (!s_check) {
+						
 						this->ecs->setPosition(this->ecs->environmentManipulation.at(i), m_tmp);
 					}
 					
 				}
 			}
-			else {
+			else if (result){
 				for (int i = 0; i < this->ecs->environmentManipulation.size(); i++) {
-					EntityID e = this->ecs->environmentManipulation.at(i);
+					EntityID e1 = this->ecs->environmentManipulation.at(i);
 					m_Types::vec3 s_position;
-					Rigidbody s_rigidbody = this->ecs->Get<Rigidbody>(e);
+					Rigidbody s_rigidbody = this->ecs->Get<Rigidbody>(e1);
 					s_position.x = s_rigidbody.velocity.x * DeltaTime;
 					s_position.z = s_rigidbody.velocity.z * DeltaTime;
 					s_position.y = (float)(DeltaTime * s_rigidbody.velocity.y + (DeltaTime * DeltaTime * s_rigidbody.force.y * 0.5));
 					if (s_rigidbody.gravity) {
 						s_position.y += (float)(0.5 * s_rigidbody.meters_per_second * DeltaTime * DeltaTime);
 					}
-					this->ecs->setPosition(e, s_position);
+					this->ecs->setPosition(e1, s_position);
 				}
 			}
 			m_test++;
@@ -462,12 +502,42 @@ engine::Engine::Engine() {
 }
 void engine::Engine::e_my_function()
 {
-
+	if (is_Test) {
+		jump_count = 0;
+		isJump = false;
+	}
+	else {
+		ecs->Create("red_box", "Red_Box.png");
+	}
 
 }
 
 void engine::Engine::e_Update()
 {
-	
-	
+	if (is_Test) {
+		
+		if (isPlay) {
+			if (this->ecs->CheckBoxCollide(0, 6) && !isJump) {
+				jump_count++;
+				isJump = true;
+			}
+			else if(!(this->ecs->CheckBoxCollide(0, 6)) && isJump){
+				isJump = false;
+				std::cout << jump_count << std::endl;
+			}
+			int tmp_num = jump_count % 10;
+			this->ecs->ChangeText(5, std::to_string(tmp_num));
+			this->graphics->UI_sprites.at(this->ecs->Get<Sprite>(5).UI_location) = this->ecs->Get<UI>(5);
+			tmp_num = jump_count / 100;
+			this->ecs->ChangeText(3, std::to_string(tmp_num));
+			this->graphics->UI_sprites.at(this->ecs->Get<Sprite>(3).UI_location) = this->ecs->Get<UI>(3);
+			tmp_num = jump_count - ((jump_count / 100) * 100 + (jump_count % 10));
+			tmp_num = tmp_num / 10;
+			this->ecs->ChangeText(4, std::to_string(tmp_num));
+			this->graphics->UI_sprites.at(this->ecs->Get<Sprite>(4).UI_location) = this->ecs->Get<UI>(4);
+		}
+	}
+	else {
+
+	}
 }

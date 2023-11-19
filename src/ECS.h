@@ -60,10 +60,17 @@ public:
 		if constexpr (sizeof...(Rest) > 0) { result = HasAll<Rest...>(entity); }
 		return result && GetAppropriateSparseSet<T>().count(entity) > 0;
 	}*/
+
+
 	void setPosition(EntityID e, m_Types::vec3 v);
 	bool Collide(EntityID e, std::string tag);
 	bool BoxCollide(EntityID e1, EntityID e2);
 	bool CheckBoxCollide(EntityID e1, EntityID e2);
+	void CreateUI(std::string m_name);
+	void ChangeText(EntityID e, std::string m_name);
+
+
+
 	// Destroy the entity by removing all components.
 	void Destroy(EntityID e) {
 		for (const auto& [index, comps] : m_components) { comps->Drop(e); }

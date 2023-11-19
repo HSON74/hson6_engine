@@ -43,18 +43,21 @@ public:
     WGPURenderPipeline pipeline;
     WGPUTextureFormat swap_chain_format;
     std::vector<Sprite> sprites;
+    std::vector<UI> UI_sprites;
     std::unordered_map<std::string, HUYSONSOMETHING> g_tex;
+    std::unordered_map<std::string, HUYSONSOMETHING> g_UI;
     std::shared_ptr<ResourceManager> resources;
     
 
     bool window_isRunning;
     void g_StartUp();
     void g_Shutdown();
-    void Draw(std::vector<Sprite>& sprites);
+    void Draw(std::vector<Sprite>& sprites, std::vector<UI>& UI_sprites);
     friend class InputManager;
     GraphicsManager();
     void resize();
     bool LoadImage(const std::string& name, const std::string& path);
+    bool LoadUI(const std::string& name, const std::string& path);
     void ShouldQuit();
     glm::mat4 multmatrix(glm::mat4 a, glm::mat4);
 };

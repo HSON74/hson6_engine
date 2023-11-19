@@ -25,8 +25,9 @@ namespace engine
 
         bool isPlay = false;
         bool isPlayMode = false;
-
-        
+        bool is_Test = false;
+        int jump_count = 0;
+        bool isJump = false;
 
         //virtual std::function<Engine> 
 
