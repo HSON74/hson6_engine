@@ -449,7 +449,7 @@ glm::mat4 GraphicsManager::multmatrix(glm::mat4 a, glm::mat4 b)
 
 void GraphicsManager::Draw(std::vector<Sprite>& sprites, std::vector<UI>& UI_sprites) {
     
-    float red = 0, green = 0, blue = 1;
+    float red = 0, green = 0, blue = 0;
     //std::cout << "Drawing" << std::endl;
     WGPUCommandEncoder encoder = wgpuDeviceCreateCommandEncoder(device, nullptr);
 

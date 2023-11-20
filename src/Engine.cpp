@@ -507,7 +507,10 @@ void engine::Engine::e_my_function()
 		isJump = false;
 	}
 	else {
-		ecs->Create("red_box", "Red_Box.png");
+		//ecs->Create("red_box", "Red_Box.png");
+		e_script->LoadScript("GameWorld", "GameWorld");
+		std::string b = "GameWorld";
+		e_script->ScriptMap[b]();
 	}
 
 }
