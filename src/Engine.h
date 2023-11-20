@@ -28,6 +28,7 @@ namespace engine
         bool is_Test = false;
         int jump_count = 0;
         bool isJump = false;
+        bool isFlipLeft = false;
 
         //virtual std::function<Engine> 
 

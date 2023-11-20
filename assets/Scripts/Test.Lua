@@ -34,12 +34,7 @@ function start()
 	ECreateObject("Bar", "Red_Box.png")
 	setActiveTrigger(6, true)
 	SetPosition(6, 0, 200, 0)
-	--SetPosition(3, 0, -200, 0)
-	--SetPosition(4,-200, 0, 0)
-	--SetPosition(1, 200, 0, 0)
-	--SetPosition(2, 0, 200, 0)
-	--SetPosition(3, 0, -200, 0)
-	--SetPosition(4,-200, 0, 0)
+
 end
 
 function update() 

@@ -66,6 +66,8 @@ public:
 	bool Collide(EntityID e, std::string tag);
 	bool BoxCollide(EntityID e1, EntityID e2);
 	bool CheckBoxCollide(EntityID e1, EntityID e2);
+	m_Types::vec3 BoxCollidePostion(EntityID e1, EntityID e2);
+	EntityID BoxEntity(EntityID e1, std::string tag);
 	void CreateUI(std::string m_name);
 	void ChangeText(EntityID e, std::string m_name);
 

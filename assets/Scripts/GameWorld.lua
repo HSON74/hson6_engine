@@ -41,11 +41,11 @@ function start()
     SetPosition(8, 3300, -1200, 0)
     SetPosition(9, 3300, 600, 0)
     SetPosition(10, -2700, 0, 0)
-    --CreateObject("Mario", "Mario.jpeg")
-    --local y = GetSprite(3)
-    --y.tag = "Background"
-    --y.layer = 12
-    --SetScale(3, 10, 10, 0)
+    ECreateObject("Mario", "Mario.jpeg")
+    local y = GetSprite(11)
+    y.tag = "Background"
+    y.layer = 12
+    SetScale(11, 10, 10, 0)
 end
 
 function update() 

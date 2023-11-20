@@ -270,7 +270,7 @@ void engine::Engine::EngineForEach()
 		ecs->Get<Sprite>(entity).position = ecs->Get<Position>(entity);
 		if (sprite.active && !sprite.in_active) {
 			
-			if (sprite.tag == "UI") {
+			if (sprite.tag == "UI" || sprite.tag == "Background") {
 				this->graphics->UI_sprites.push_back(this->ecs->Get<UI>(sprite.EntityN));
 				sprite.UI_location = (int)this->graphics->UI_sprites.size() - 1;
 			}
@@ -308,19 +308,20 @@ void engine::Engine::EngineForEach()
 		int64_t m_test = 0;
 		u_result = false;
 		bool result = false;
-		
+		EntityID tmp1 = -1;
 		this->ecs->ForEach<Sprite>([&](EntityID e) {
 			u_result = false;
-			if (this->ecs->Get<Sprite>(e).tag == "UI") {
-				//std::cout << "Entity: " << this->ecs->Get<Sprite>(e).EntityN << " tag: " << this->ecs->Get<Sprite>(e).tag << std::endl;
-				return;
-			}
+			
 			for (int i = 0; i < this->ecs->environmentManipulation.size(); i++) {
 				if (e == this->ecs->environmentManipulation.at(i)) {
 					result = true;
 				}
 			}
 			if (!result) {
+				if (this->ecs->Get<Sprite>(e).tag == "UI" || this->ecs->Get<Sprite>(e).tag == "Background") {
+					//std::cout << "Entity: " << this->ecs->Get<Sprite>(e).EntityN << " tag: " << this->ecs->Get<Sprite>(e).tag << std::endl;
+					return;
+				}
 				for (int i = 0; i < this->ecs->environmentManipulation.size(); i++) {
 					if (!u_result) {
 						u_result = this->ecs->CheckBoxCollide(e, this->ecs->environmentManipulation.at(i));
@@ -337,19 +338,35 @@ void engine::Engine::EngineForEach()
 					Rigidbody s_rigidbody = this->ecs->Get<Rigidbody>(e1);
 					s_position.x = s_rigidbody.velocity.x * DeltaTime;
 					s_position.z = s_rigidbody.velocity.z * DeltaTime;
-					s_position.y = (float)(DeltaTime * s_rigidbody.velocity.y + (DeltaTime * DeltaTime * (s_rigidbody.force.y) * 0.5));
+					s_position.y = (float)(DeltaTime * s_rigidbody.velocity.y + (DeltaTime * DeltaTime * (s_rigidbody.force.y - m_gravity) * 0.5));
 					this->ecs->setPosition(e1, s_position);
+					if (this->ecs->Get<Rigidbody>(this->ecs->environmentManipulation.at(i)).velocity.x > 0 && isFlipLeft) {
+						isFlipLeft = false;
+						std::cout << "It fliped" << std::endl;
+						tmp1 = -1;
+					}
+					else if (this->ecs->Get<Rigidbody>(this->ecs->environmentManipulation.at(i)).velocity.x < 0 && !isFlipLeft) {
+						isFlipLeft = true;
+						std::cout << "It fliped" << std::endl;
+						tmp1 = -1;
+					}
 				}
 				for (int i = 0; i < this->ecs->environmentManipulation.size(); i++) {
+					if(this->ecs->Get<Sprite>(this->ecs->environmentManipulation.at(i)).tag == "UI" || this->ecs->Get<Sprite>(this->ecs->environmentManipulation.at(i)).tag == "Background") {
+						continue;
+					}
 					m_Types::vec3 c = this->ecs->Get<BoxCollider>(e).offset;
 					m_Types::vec2 c_size = this->ecs->Get<BoxCollider>(e).size;
 					m_Types::vec3 d = this->ecs->Get<BoxCollider>(this->ecs->environmentManipulation.at(i)).offset;
 					m_Types::vec2 d_size = this->ecs->Get<BoxCollider>(this->ecs->environmentManipulation.at(i)).size;
 					m_Types::vec3 tmp = m_Types::vec3(0, 0, 0);
+					bool s_check = false;
+					EntityID tmp2 = -1;
 					if (((c.x <= d.x && c.x + c_size.x >= d.x - d_size.x || c.x >= d.x && c.x - c_size.x <= d.x + d_size.x)) &&
 						((c.y >= d.y && c.y - c_size.y <= d.y + d_size.y) || (c.y <= d.y && c.y + c_size.y >= d.y - d_size.y))) {
 						m_Types::vec3 tmptmp = m_Types::vec3(0, 0, 0);
-						
+						s_check = true;
+						tmp2 = this -> ecs->environmentManipulation.at(i);
 						if (c.x <= d.x && c.x + c_size.x >= d.x - d_size.x) {
 							tmptmp.x += ((c.x + c_size.x) - (d.x - d_size.x));
 						}
@@ -362,36 +379,76 @@ void engine::Engine::EngineForEach()
 						else if (c.y <= d.y && c.y + c_size.y >= d.y - d_size.y) {
 							tmptmp.y += ((c.y + c_size.y) - (d.y - d_size.y));
 						}
-						if (std::abs(tmptmp.x) < std::abs(tmptmp.y)) {
+						if(std::abs(tmptmp.x) == std::abs(tmptmp.y)){
+							tmp.x = tmptmp.x;
+							tmp.y = tmptmp.y;
+						}
+						else if (std::abs(tmptmp.x) < std::abs(tmptmp.y)) {
 							tmp.x = tmptmp.x;
 						}
 						else if (std::abs(tmptmp.x) > std::abs(tmptmp.y)) {
 							tmp.y = tmptmp.y;
-						}
-						else {
-							tmp.x = tmptmp.x;
-							tmp.y = tmptmp.y;
+							
 						}
 						if ((this->ecs->Get<BoxCollider>(this->ecs->environmentManipulation.at(i)).IsTrigger)) {
 							tmp = m_Types::vec3(0, 0, 0);
 						}
 					}
-					
-					
-					if ((std::abs(m_tmp.x) > std::abs(tmp.x) && tmp.x != 0) || m_tmp.x == 0) {
-						m_tmp.x = tmp.x;
-					}
-					if ((std::abs(m_tmp.y) > std::abs(tmp.y) && tmp.y != 0) || m_tmp.y == 0) {
-						m_tmp.y = tmp.y;
-					}
+					if (s_check) {
+						if (tmp1 != tmp2 && tmp2 != -1) {
+							if (tmp1 != -1) {
+								if (this->ecs->CheckBoxCollide(tmp1, tmp2)) {
+									BoxCollider s_Object_a = this->ecs->Get<BoxCollider>(tmp1);
+									BoxCollider s_Object_b = this->ecs->Get<BoxCollider>(tmp2);
+									if (s_Object_a.offset.y == s_Object_b.offset.y) {
+										if (this->ecs->Get<Rigidbody>(this->ecs->environmentManipulation.at(i)).velocity.x > 0 
+											&& tmp.x > 0 && m_tmp.y < 0 && !isFlipLeft) {
 
+											m_tmp.x = tmp.x;
+										}
+										else if (this->ecs->Get<Rigidbody>(this->ecs->environmentManipulation.at(i)).velocity.x < 0 
+											&& tmp.x < 0 && m_tmp.y < 0 && isFlipLeft) {
+											m_tmp.x = tmp.x;
+											std::cout << "Entity " << tmp1 << ": " << s_Object_a.offset.y << std::endl;
+											std::cout << "Entity " << tmp2 << ": " << s_Object_b.offset.y << std::endl;
+										}
+										else if (m_tmp.y == 0){
+											m_tmp.x = tmp.x;
+										}
+										if ((std::abs(m_tmp.y) > std::abs(tmp.y) && tmp.y != 0) || m_tmp.y == 0) {
+											m_tmp.y = tmp.y;
+										}
+									}
+									else {
+										if ((std::abs(m_tmp.x) > std::abs(tmp.x) && tmp.x != 0) || m_tmp.x == 0) {
+											m_tmp.x = tmp.x;
+										}
+										if ((std::abs(m_tmp.y) > std::abs(tmp.y) && tmp.y != 0) || m_tmp.y == 0) {
+											//m_tmp.y = tmp.y;
+											m_tmp.y = tmp.y;
+										}
+									}
+								}
+							}
+							else {
+								tmp1 = tmp2;
+								if ((std::abs(m_tmp.x) > std::abs(tmp.x) && tmp.x != 0) || m_tmp.x == 0) {
+									m_tmp.x = tmp.x;
+								}
+								if ((std::abs(m_tmp.y) > std::abs(tmp.y) && tmp.y != 0) || m_tmp.y == 0) {
+									//m_tmp.y = tmp.y;
+									m_tmp.y = tmp.y;
+								}
+							}
+							
+						}
+					}
 				}
-				//std::cout << "WE are one at the end with " << m_tmp.x << std::endl;
 				
 				for (int i = 0; i < this->ecs->environmentManipulation.size(); i++) {
 					bool s_check = false;
 					if (this->ecs->Get<Sprite>(this->ecs->environmentManipulation.at(i)).tag == "UI" || this->ecs->Get<Sprite>(this->ecs->environmentManipulation.at(i)).tag == "Background") {
-						s_check = true;
+						s_check = false;
 					}
 					if (!s_check) {
 						
@@ -399,6 +456,7 @@ void engine::Engine::EngineForEach()
 					}
 					
 				}
+				m_tmp = m_Types::vec3(0, 0, 0);
 			}
 			else if (result){
 				for (int i = 0; i < this->ecs->environmentManipulation.size(); i++) {
@@ -504,6 +562,7 @@ void engine::Engine::e_my_function()
 {
 	if (is_Test) {
 		jump_count = 0;
+		this->graphics->changeBackground(0, 0, 1);
 		isJump = false;
 	}
 	else {

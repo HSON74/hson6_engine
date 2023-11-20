@@ -47,6 +47,7 @@ public:
     std::unordered_map<std::string, HUYSONSOMETHING> g_tex;
     std::unordered_map<std::string, HUYSONSOMETHING> g_UI;
     std::shared_ptr<ResourceManager> resources;
+    float red = 0, green = 0, blue = 0;
     
 
     bool window_isRunning;
@@ -54,6 +55,7 @@ public:
     void g_Shutdown();
     void Draw(std::vector<Sprite>& sprites, std::vector<UI>& UI_sprites);
     friend class InputManager;
+    void changeBackground(float r1, float g1, float b1);
     GraphicsManager();
     void resize();
     bool LoadImage(const std::string& name, const std::string& path);

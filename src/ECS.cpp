@@ -57,21 +57,13 @@ void ECS::setPosition(EntityID e, m_Types::vec3 v)
 
 bool ECS::Collide(EntityID e, std::string tag)
 {
-	bool result = 0;
+	bool result = false;
 	Sprite coll_s = Get<Sprite>(e);
 	ForEach<Sprite>([&](EntityID e1) {
 		Sprite coll_s1 = Get<Sprite>(e1);
-		if (coll_s1.tag.compare(tag)) {
-			m_Types::vec3 a = this->Get<Collider>(e).offset;
-			m_Types::vec2 a_size = this->Get<BoxCollider>(e).size;
-			m_Types::vec3 b = this->Get<Collider>(e1).offset;
-			m_Types::vec2 b_size = this->Get<BoxCollider>(e1).size;
-			if ((a.x-a_size.x < b.x + b_size.x || a.x + a_size.x > b.x - b_size.x)&&(a.y + a_size.y > b.y - b_size.y || a.y - a_size.y < b.y + b_size.y)) {
-				BoxCollide(e, e1);
-				result = true;
-			}
+		if (coll_s1.tag == tag) {
+			result = CheckBoxCollide(e, e1);
 		}
-		
 	});
 	return false;
 }
@@ -160,6 +152,62 @@ bool ECS::CheckBoxCollide(EntityID e1, EntityID e2) {
 		check_result = true;
 	}
 	return check_result;
+}
+m_Types::vec3 ECS::BoxCollidePostion(EntityID e1, EntityID e2) {
+	m_Types::vec2 m_size = m_Types::vec2(90, 90);
+	m_Types::vec3 c = this->Get<BoxCollider>(e1).offset;
+	m_Types::vec2 c_size = this->Get<BoxCollider>(e1).size;
+	m_Types::vec3 d = this->Get<BoxCollider>(e2).offset;
+	m_Types::vec2 d_size = this->Get<BoxCollider>(e2).size;;
+	m_Types::vec3 tmp = m_Types::vec3(0, 0, 0);
+	bool check_result = false;
+
+	if (((c.x <= d.x && c.x + c_size.x >= d.x - d_size.x || c.x >= d.x && c.x - c_size.x <= d.x + d_size.x)) &&
+		((c.y >= d.y && c.y - c_size.y <= d.y + d_size.y) || (c.y <= d.y && c.y + c_size.y >= d.y - d_size.y))) {
+		m_Types::vec3 tmptmp = m_Types::vec3(0, 0, 0);
+		if (c.x <= d.x && c.x + c_size.x >= d.x - d_size.x) {
+			tmptmp.x -= ((c.x + c_size.x) - (d.x - d_size.x));
+			check_result = true;
+		}
+		else if (c.x >= d.x && c.x - c_size.x <= d.x + d_size.x) {
+			tmptmp.x -= ((c.x - c_size.x) - (d.x + d_size.x));
+			//std::cout << "We are one" << std::endl;
+			check_result = true;
+		}
+		if (c.y >= d.y && c.y - c_size.y <= d.y + d_size.y) {
+			tmptmp.y -= ((c.y - c_size.y) - (d.y + d_size.y));
+			check_result = true;
+		}
+		else if (c.y <= d.y && c.y + c_size.y >= d.y - d_size.y) {
+			tmptmp.y -= ((c.y + c_size.y) - (d.y - d_size.y));
+			check_result = true;
+		}
+		if (std::abs(tmptmp.x) < std::abs(tmptmp.y)) {
+			tmp.x = tmptmp.x;
+		}
+		else  if (std::abs(tmptmp.x) > std::abs(tmptmp.y)) {
+			tmp.y = tmptmp.y;
+		}
+		else {
+			tmp.x = tmptmp.x;
+			tmp.y = tmptmp.y;
+		}
+	}
+	return tmp;
+}
+EntityID ECS::BoxEntity(EntityID e, std::string tag)
+{
+	EntityID result = -1;
+	Sprite coll_s = Get<Sprite>(e);
+	ForEach<Sprite>([&](EntityID e1) {
+		Sprite coll_s1 = Get<Sprite>(e1);
+		if (coll_s1.tag == tag) {
+			if (CheckBoxCollide(e, e1)) {
+				result = e1;
+			}
+		}
+	});
+	return result;
 }
 void ECS::CreateUI(std::string m_name)
 {

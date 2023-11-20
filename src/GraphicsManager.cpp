@@ -289,7 +289,11 @@ GraphicsManager::GraphicsManager()
     window_fullscreen = false;
     resources = std::make_shared<ResourceManager>();
 };
-
+void GraphicsManager::changeBackground(float r1, float g1, float b1) {
+    this->red = r1;
+    this->green = g1;
+    this->blue = b1;
+}
 
 void GraphicsManager::resize() {
 
@@ -449,7 +453,6 @@ glm::mat4 GraphicsManager::multmatrix(glm::mat4 a, glm::mat4 b)
 
 void GraphicsManager::Draw(std::vector<Sprite>& sprites, std::vector<UI>& UI_sprites) {
     
-    float red = 0, green = 0, blue = 0;
     //std::cout << "Drawing" << std::endl;
     WGPUCommandEncoder encoder = wgpuDeviceCreateCommandEncoder(device, nullptr);
 
