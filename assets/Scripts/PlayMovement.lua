@@ -15,6 +15,11 @@ function update()
 		--EAddVelocity(0, -10, 0)
 	end
 	--Future: Update the collide to take tag
+	if Collide(0, "Coin") then
+		print("It hit")
+		local z = CoinCollide(0, "Coin");
+		Destroy(z);
+	end
 	
 end
 

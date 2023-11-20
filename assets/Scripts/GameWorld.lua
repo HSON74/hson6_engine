@@ -20,6 +20,7 @@ function start()
     setActiveTrigger(9, true)
     local a = GetSprite(10)
     a.layer = 11
+    a.tag = "Coin"
     setActiveTrigger(10, true)
     SetScale(1, 12, 3, 0)
     SetScale(2, 12, 3, 0)

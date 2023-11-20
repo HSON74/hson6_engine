@@ -72,6 +72,7 @@ void engine::Engine::e_StartUp(std::shared_ptr<engine::Engine> &e)
 		ecs->Get<BoxCollider>(e).size.y = y * 100.f;
 		ecs->Get<BoxCollider>(e).size.z = z * 100.f;
 		});
+	e_script->lua.set_function("CoinCollide", [&](EntityID e, std::string tag) {return ecs->BoxEntity(e, tag); });
 	e_script->lua.set_function("Collide", [&](EntityID e, std::string tag) {return ecs->Collide(e, tag); });
 	e_script->lua.set_function("CheckCollide", [&](EntityID e, EntityID e1) {return ecs->CheckBoxCollide(e, e1); });
 	e_script->lua.set_function("AddRigidBody", [&](EntityID e) {

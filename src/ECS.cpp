@@ -65,7 +65,7 @@ bool ECS::Collide(EntityID e, std::string tag)
 			result = CheckBoxCollide(e, e1);
 		}
 	});
-	return false;
+	return result;
 }
 bool ECS::BoxCollide(EntityID e1, EntityID e2) {
 	m_Types::vec2 m_size  = m_Types::vec2(90,90);
@@ -204,6 +204,7 @@ EntityID ECS::BoxEntity(EntityID e, std::string tag)
 		if (coll_s1.tag == tag) {
 			if (CheckBoxCollide(e, e1)) {
 				result = e1;
+				return;
 			}
 		}
 	});
