@@ -12,6 +12,9 @@ class SoundManager {
 		SoundManager();
 		void StartUp();
 		void Play(const std::string& name);
+		void Loop(const std::string& name, bool activecode);
+		void Stop(const std::string& name);
+		void SetVolume(const std::string& name, float vol);
 		void Shutdown();
 
 };

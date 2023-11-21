@@ -68,9 +68,9 @@ void engine::Engine::e_StartUp(std::shared_ptr<engine::Engine> &e)
 		ecs->Get<Sprite>(e).scale.x = x; 
 		ecs->Get<Sprite>(e).scale.y = y; 
 		ecs->Get<Sprite>(e).scale.z = z; 
-		ecs->Get<BoxCollider>(e).size.x = x * 100.f;
-		ecs->Get<BoxCollider>(e).size.y = y * 100.f;
-		ecs->Get<BoxCollider>(e).size.z = z * 100.f;
+		ecs->Get<BoxCollider>(e).size.x = std::abs(x) * 100.f;
+		ecs->Get<BoxCollider>(e).size.y = std::abs(y) * 100.f;
+		ecs->Get<BoxCollider>(e).size.z = std::abs(z) * 100.f;
 		});
 	e_script->lua.set_function("CoinCollide", [&](EntityID e, std::string tag) {return ecs->BoxEntity(e, tag); });
 	e_script->lua.set_function("Collide", [&](EntityID e, std::string tag) {return ecs->Collide(e, tag); });
@@ -161,7 +161,11 @@ void engine::Engine::e_StartUp(std::shared_ptr<engine::Engine> &e)
 	e_script->lua.set_function("KeyIsDown", [&](const int keycode) { return GetKeyDown(keycode); });
 	e_script->lua.set_function("Quit", [&]() {e->graphics->ShouldQuit(); });
 	//Sound
-
+	e_script->lua.set_function("LoadSound", [&](std::string m_name, std::string m_path) {return e->sound->LoadSound(m_name, m_path); });
+	e_script->lua.set_function("Play", [&](std::string m_name) {e->sound->Play(m_name); });
+	e_script->lua.set_function("Loop", [&](std::string m_name, bool activecode) {e->sound->Loop(m_name, activecode); });
+	e_script->lua.set_function("Stop", [&](std::string m_name) {e->sound->Stop(m_name); });
+	e_script->lua.set_function("SetVolume", [&](std::string m_name, float vol) {e->sound->SetVolume(m_name, vol); });
 
 	if (is_Test) {
 		e_script->LoadScript("Test", "Test");
@@ -271,7 +275,7 @@ void engine::Engine::EngineForEach()
 		ecs->Get<Sprite>(entity).position = ecs->Get<Position>(entity);
 		if (sprite.active && !sprite.in_active) {
 			
-			if (sprite.tag == "UI" || sprite.tag == "Background") {
+			if (sprite.tag == "UI") {
 				this->graphics->UI_sprites.push_back(this->ecs->Get<UI>(sprite.EntityN));
 				sprite.UI_location = (int)this->graphics->UI_sprites.size() - 1;
 			}
@@ -284,6 +288,20 @@ void engine::Engine::EngineForEach()
 		for (int m_s_i = 0; m_s_i < this->graphics->sprites.size(); m_s_i++) {
 			if (sprite.EntityN == (this->graphics->sprites.at(m_s_i).EntityN)) {
 				this->graphics->sprites.at(m_s_i).position = sprite.position;
+				this->graphics->sprites.at(m_s_i).scale = sprite.scale;
+				//this->graphics->sprites.at(m_s_i).active = sprite.active;
+				//this->graphics->sprites.at(m_s_i).in_active = sprite.in_active;
+				//this->graphics->sprites.at(m_s_i).imageName = sprite.imagePath;
+				//this->graphics->sprites.at(m_s_i).rotation = sprite.rotation;
+				//this->graphics->sprites.at(m_s_i).size = sprite.size;
+				//this->graphics->sprites.at(m_s_i).tag = sprite.tag;
+				//if (sprite.tag == "UI" || sprite.tag == "Background") {
+					//this->graphics->UI_sprites.push_back(this->ecs->Get<UI>(sprite.EntityN));
+					//sprite.UI_location = (int)this->graphics->UI_sprites.size() - 1;
+				//}
+				//this->graphics->sprites.at(m_s_i).UI_location = sprite.UI_location;
+				//this->graphics->sprites.at(m_s_i).z_value = sprite.z_value;
+
 
 			}
 		}

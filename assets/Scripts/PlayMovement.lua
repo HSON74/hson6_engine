@@ -2,12 +2,16 @@
 function update()
 	if KeyIsDown(KEYBOARD.D) then
 		EAddVelocity(20, 0, 0)
+		SetScale(0, 3, 3, 0)
 	end
 	if KeyIsDown(KEYBOARD.A) then
 		EAddVelocity(-20, 0, 0)
+		SetScale(0, -3, 3, 0)
 	end
 	if KeyIsDown(KEYBOARD.W) then
 		--AddVelocity(0, 0, 10, 0)
+		Stop("Jump")
+		Play("Jump")
 		EAddForce(10)
 		--EToggle(3)
 	end
@@ -18,7 +22,14 @@ function update()
 	if Collide(0, "Coin") then
 		print("It hit")
 		local z = CoinCollide(0, "Coin");
+		Play("Coin")
 		Destroy(z);
+	end
+	if Collide(0, "Flag") then
+		print("It hit Flag")
+		Stop("Win")
+
+		Play("Win")
 	end
 	
 end

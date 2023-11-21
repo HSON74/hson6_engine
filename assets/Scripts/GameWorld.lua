@@ -4,6 +4,11 @@ function start()
 	local x = GetSprite(0);
 	x.layer = 2
     SetScale(0, 3, 3, 0)
+    LoadSound("Background", "Music.wav");
+    LoadSound("Jump", "Jump.wav");
+    LoadSound("Coin", "Coin.wav");
+    LoadSound("Win", "Win.wav");
+    Play("Background")
 	AddScript(0, "PlayMovement")
 	ECreateObject("Grass", "Grass.jpg")
     ECreateObject("Grass", "Grass.jpg")
@@ -17,6 +22,7 @@ function start()
     ECreateObject("Coin", "Coin.png")
     local z = GetSprite(9)
     z.layer = 11
+    z.tag = "Flag"
     setActiveTrigger(9, true)
     local a = GetSprite(10)
     a.layer = 11
@@ -46,7 +52,26 @@ function start()
     local y = GetSprite(11)
     y.tag = "Background"
     y.layer = 12
-    SetScale(11, 10, 10, 0)
+    SetScale(11, 100, 100, 0)
+    ECreateObject("Coin", "Coin.png")
+    local y1 = GetSprite(12)
+    y1.tag = "Coin"
+    y1.layer = 11
+    setActiveTrigger(12, true)
+    SetPosition(12, 1000, 600, 0)
+    ECreateObject("Coin", "Coin.png")
+    local y1 = GetSprite(13)
+    y1.tag = "Coin"
+    y1.layer = 11
+    setActiveTrigger(13, true)
+    SetPosition(13, 2000, 600, 0)
+    ECreateObject("Coin", "Coin.png")
+    local y1 = GetSprite(14)
+    y1.tag = "Coin"
+    y1.layer = 11
+    setActiveTrigger(14, true)
+    SetPosition(14, 3000, 600, 0)
+    
 end
 
 function update() 

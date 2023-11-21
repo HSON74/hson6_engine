@@ -137,7 +137,7 @@ void GraphicsManager::g_StartUp()
 @group(0) @binding(2) var texData: texture_2d<f32>;
 
 struct VertexInput {
-    @location(0) position: vec3f,
+    @location(0) position: vec2f,
     @location(1) texcoords: vec2f,
     @location(2) translation: vec3f,
     @location(3) scale: vec3f,
@@ -152,7 +152,7 @@ struct VertexOutput {
 @vertex
 fn vertex_shader_main( in: VertexInput ) -> VertexOutput {
     var out: VertexOutput;
-    out.position = uniforms.projection * vec4f( vec3f( in.scale * in.position ) + in.translation, 1.0 );
+    out.position = uniforms.projection * vec4f( vec3f( in.scale * vec3f(in.position,1.0)) + in.translation, 1.0 );
    
     out.texcoords = in.texcoords;
     return out;
@@ -524,7 +524,9 @@ void GraphicsManager::Draw(std::vector<Sprite>& sprites, std::vector<UI>& UI_spr
            d.translation = vec3((float)((float)s.position.x), (float)((float)s.position.y), (float)s.position.z);
            
            d.scale = vec3(s.scale.x * 100, s.scale.y * 100, s.scale.z*100);
-          
+           //if (s.EntityN == 0) {
+             //  std::cout << "x: " << s.scale.x << "y: " << s.scale.y << "z: " << s.scale.z << std::endl;
+           //}
            float angle_x = (float)(s.rotation.x * 3.14) / 180.0f;
            float angle_y = (float)(s.rotation.y * 3.14) / 180.0f;
            float angle_z = (float)(s.rotation.z * 3.14) / 180.0f;

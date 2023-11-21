@@ -62,7 +62,10 @@ bool ECS::Collide(EntityID e, std::string tag)
 	ForEach<Sprite>([&](EntityID e1) {
 		Sprite coll_s1 = Get<Sprite>(e1);
 		if (coll_s1.tag == tag) {
-			result = CheckBoxCollide(e, e1);
+			if (CheckBoxCollide(e, e1)) {
+				result = true;
+				return;
+			};
 		}
 	});
 	return result;
