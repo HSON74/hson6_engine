@@ -146,7 +146,7 @@ bool ECS::CheckBoxCollide(EntityID e1, EntityID e2) {
 	m_Types::vec3 c = this->Get<BoxCollider>(e1).offset;
 	m_Types::vec2 c_size = this->Get<BoxCollider>(e1).size;
 	m_Types::vec3 d = this->Get<BoxCollider>(e2).offset;
-	m_Types::vec2 d_size = this->Get<BoxCollider>(e2).size;;
+	m_Types::vec2 d_size = this->Get<BoxCollider>(e2).size;
 	m_Types::vec3 tmp = m_Types::vec3(0, 0, 0);
 	bool check_result = false;
 

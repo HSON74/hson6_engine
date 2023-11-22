@@ -359,14 +359,14 @@ void engine::Engine::EngineForEach()
 					s_position.z = s_rigidbody.velocity.z * DeltaTime;
 					s_position.y = (float)(DeltaTime * s_rigidbody.velocity.y + (DeltaTime * DeltaTime * (s_rigidbody.force.y - m_gravity) * 0.5));
 					this->ecs->setPosition(e1, s_position);
-					if (this->ecs->Get<Rigidbody>(this->ecs->environmentManipulation.at(i)).velocity.x > 0 && isFlipLeft) {
+					if (this->ecs->Get<Rigidbody>(this->ecs->environmentManipulation.at(i)).velocity.x < 0 && isFlipLeft) {
 						isFlipLeft = false;
-						std::cout << "It fliped" << std::endl;
+						std::cout << "It fliped is false" << std::endl;
 						tmp1 = -1;
 					}
-					else if (this->ecs->Get<Rigidbody>(this->ecs->environmentManipulation.at(i)).velocity.x < 0 && !isFlipLeft) {
+					else if (this->ecs->Get<Rigidbody>(this->ecs->environmentManipulation.at(i)).velocity.x > 0 && !isFlipLeft) {
 						isFlipLeft = true;
-						std::cout << "It fliped" << std::endl;
+						std::cout << "It fliped is true" << std::endl;
 						tmp1 = -1;
 					}
 				}
@@ -378,6 +378,9 @@ void engine::Engine::EngineForEach()
 					m_Types::vec2 c_size = this->ecs->Get<BoxCollider>(e).size;
 					m_Types::vec3 d = this->ecs->Get<BoxCollider>(this->ecs->environmentManipulation.at(i)).offset;
 					m_Types::vec2 d_size = this->ecs->Get<BoxCollider>(this->ecs->environmentManipulation.at(i)).size;
+					if (this->ecs->Get<BoxCollider>(this->ecs->environmentManipulation.at(i)).IsTrigger) {
+						continue;
+					}
 					m_Types::vec3 tmp = m_Types::vec3(0, 0, 0);
 					bool s_check = false;
 					EntityID tmp2 = -1;
@@ -420,20 +423,22 @@ void engine::Engine::EngineForEach()
 									BoxCollider s_Object_a = this->ecs->Get<BoxCollider>(tmp1);
 									BoxCollider s_Object_b = this->ecs->Get<BoxCollider>(tmp2);
 									if (s_Object_a.offset.y == s_Object_b.offset.y) {
-										if (this->ecs->Get<Rigidbody>(this->ecs->environmentManipulation.at(i)).velocity.x > 0 
-											&& tmp.x > 0 && m_tmp.y < 0 && !isFlipLeft) {
+										//std::cout << "x velocity: " << (-1*this->ecs->Get<Rigidbody>(this->ecs->environmentManipulation.at(i)).velocity.x) << std::endl;
+										std::cout << "x tmp : "<< tmp.x << std::endl;
+										if (this->ecs->Get<Rigidbody>(this->ecs->environmentManipulation.at(i)).velocity.x < 0 
+											&& tmp.x > 0 && !isFlipLeft) {
+											std::cout << "Move Right" << std::endl;
+											m_tmp.x = -1 * tmp.x;;
+										}
+										else if (this->ecs->Get<Rigidbody>(this->ecs->environmentManipulation.at(i)).velocity.x > 0 
+											&& tmp.x < 0 && isFlipLeft) {
+											m_tmp.x = -1* tmp.x;
+											std::cout << "Move Left" << std::endl;
+										}
+										else {
+											m_tmp.x = tmp.x;
+										}
 
-											m_tmp.x = tmp.x;
-										}
-										else if (this->ecs->Get<Rigidbody>(this->ecs->environmentManipulation.at(i)).velocity.x < 0 
-											&& tmp.x < 0 && m_tmp.y < 0 && isFlipLeft) {
-											m_tmp.x = tmp.x;
-											std::cout << "Entity " << tmp1 << ": " << s_Object_a.offset.y << std::endl;
-											std::cout << "Entity " << tmp2 << ": " << s_Object_b.offset.y << std::endl;
-										}
-										else if (m_tmp.y == 0){
-											m_tmp.x = tmp.x;
-										}
 										if ((std::abs(m_tmp.y) > std::abs(tmp.y) && tmp.y != 0) || m_tmp.y == 0) {
 											m_tmp.y = tmp.y;
 										}
@@ -478,6 +483,7 @@ void engine::Engine::EngineForEach()
 				m_tmp = m_Types::vec3(0, 0, 0);
 			}
 			else if (result){
+				tmp1 = -1;
 				for (int i = 0; i < this->ecs->environmentManipulation.size(); i++) {
 					EntityID e1 = this->ecs->environmentManipulation.at(i);
 					m_Types::vec3 s_position;
@@ -490,6 +496,7 @@ void engine::Engine::EngineForEach()
 					}
 					this->ecs->setPosition(e1, s_position);
 				}
+
 			}
 			m_test++;
 			m_tmp = m_Types::vec3(0, 0, 0);
