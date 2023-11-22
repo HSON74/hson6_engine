@@ -424,16 +424,16 @@ void engine::Engine::EngineForEach()
 									BoxCollider s_Object_b = this->ecs->Get<BoxCollider>(tmp2);
 									if (s_Object_a.offset.y == s_Object_b.offset.y) {
 										//std::cout << "x velocity: " << (-1*this->ecs->Get<Rigidbody>(this->ecs->environmentManipulation.at(i)).velocity.x) << std::endl;
-										std::cout << "x tmp : "<< tmp.x << std::endl;
+										//std::cout << "x tmp : "<< tmp.x << std::endl;
 										if (this->ecs->Get<Rigidbody>(this->ecs->environmentManipulation.at(i)).velocity.x < 0 
 											&& tmp.x > 0 && !isFlipLeft) {
-											std::cout << "Move Right" << std::endl;
+											//std::cout << "Move Right" << std::endl;
 											m_tmp.x = -1 * tmp.x;;
 										}
 										else if (this->ecs->Get<Rigidbody>(this->ecs->environmentManipulation.at(i)).velocity.x > 0 
 											&& tmp.x < 0 && isFlipLeft) {
 											m_tmp.x = -1* tmp.x;
-											std::cout << "Move Left" << std::endl;
+											//std::cout << "Move Left" << std::endl;
 										}
 										else {
 											m_tmp.x = tmp.x;
