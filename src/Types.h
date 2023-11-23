@@ -91,7 +91,24 @@ struct Collider {
 struct BoxCollider : Collider {
     m_Types::vec3 size;
 };
-
+struct EntityAnimator {
+    float speed;
+    float frame_count;
+    std::vector<std::vector< WGPUTexture>> e_Animator_Frame;
+    void destoryit() {
+        for (int i = 0; i < e_Animator_Frame.size(); i++) {
+            for (int j = 0; j < e_Animator_Frame.at(i).size(); j++) {
+                if (e_Animator_Frame.at(i).at(j) != nullptr) {
+                    wgpuTextureDestroy(e_Animator_Frame.at(i).at(j));
+                    wgpuTextureRelease(e_Animator_Frame.at(i).at(j));
+                }
+            }
+            e_Animator_Frame.at(i).clear();
+        }
+        e_Animator_Frame.clear();
+        
+    };
+};
 
 const float DeltaTime = 1.0f / 60.0f;
 enum INPUTVALUE {
