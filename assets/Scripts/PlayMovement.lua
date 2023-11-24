@@ -12,11 +12,11 @@ function update()
 		--AddVelocity(0, 0, 10, 0)
 		Stop("Jump")
 		Play("Jump")
-		PlayAnimation(0, "Jump")
+		--PlayAnimation(0, "Jump")
 		EAddForce(10)
 		--EToggle(3)
 	else
-		PlayAnimation(0, "Idle")
+		--PlayAnimation(0, "Idle")
 	end
 	if KeyIsDown(KEYBOARD.S) then
 		--EAddVelocity(0, -10, 0)

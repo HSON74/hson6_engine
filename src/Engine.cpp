@@ -722,3 +722,155 @@ void engine::Engine::e_Update()
 
 	}
 }
+/*
+* //View;
+	 public void Perspective(double fovy, double aspect, double near, double far) {
+			double left, right, bottom, top;
+
+			fovy = fovy*dg;
+			
+			top = near*Math.tan(fovy/2);
+			bottom = -top;
+			right = aspect*top;
+			left = -right;
+			
+			Ortho((float) left, (float)right, (float)bottom, (float)top, (float)near, (float)far);
+	}
+	 void Ortho(float l, float r, float b, float t, float n, float f) {// look at z near and far
+	  	    float PROJ[] = {2f*n/(r-l),			0,				0,			0,   
+	  	    	            	0, 			2f*n/(t-b), 		0, 			0,   
+	  	    	        	(r+l)/(r-l),	(t+b)/(t-b), 	-(f+n)/(f-n),	-1,  
+	  	    	             	0, 				0, 			-2*f*n/(f-n), 	0
+	  	    }; 
+	    	
+			// connect the PROJECTION matrix to the vertex shader
+			int projLoc = gl.glGetUniformLocation(vfPrograms,  "proj_matrix"); 
+			gl.glProgramUniformMatrix4fv(vfPrograms, projLoc,  1,  false,  PROJ, 0);
+
+	 }
+	 public void LookAt(double eX, double eY, double eZ, double cX, double cY, double cZ, double upX, double upY,
+				double upZ) {
+			// eye and center are points, but up is a vector
+
+			// 1. change center into a vector:
+			// glTranslated(-eX, -eY, -eZ);
+			cX = cX - eX;
+			cY = cY - eY;
+			cZ = cZ - eZ;
+
+			// 2. The angle of center on xz plane and x axis
+			// i.e. angle to rot so center in the neg. yz plane
+			double a = Math.atan(cZ / cX);
+			if (cX == 0)
+				a = Math.PI;
+			else if (cX >= 0) {
+				a = a + Math.PI / 2;
+			} else {
+				a = a - Math.PI / 2;
+			}
+
+			// 3. The angle between the center and y axis
+			// i.e. angle to rot so the center is in the negative z axis
+			double b = Math.acos(cY / Math.sqrt(cX * cX + cY * cY + cZ * cZ));
+			b = b - Math.PI / 2;
+
+			// 4. up rotate around y axis (a) radians
+			double upx = upX * Math.cos(a) + upZ * Math.sin(a);
+			double upz = -upX * Math.sin(a) + upZ * Math.cos(a);
+			upX = upx;
+			upZ = upz;
+
+			// 5. up rotate around x axis (b) radians
+			double upy = upY * Math.cos(b) - upZ * Math.sin(b);
+			upz = upY * Math.sin(b) + upZ * Math.cos(b);
+			upY = upy;
+			upZ = upz;
+
+			// 6. the angle between the vector of (up projected on xy plane) and y axis
+			// i.e. the angle to rot around z so that up is in yz plane
+			double c = Math.atan(upX / upY);
+			if (upY < 0) {
+				c = c + Math.PI;
+			}
+			Rotatef((float) c, 0, 0, 1);
+			// up in yz plane
+			Rotatef((float) b, 1, 0, 0);
+			// center in negative z axis
+			Rotatef((float) a, 0, 1, 0);
+			// center in yz plane
+			Translatef((float) -eX, (float) -eY, (float) -eZ);
+			// eye at the origin
+		}
+
+		public void gluLookAt(double eX, double eY, double eZ, double cX, double cY, double cZ, double upX, double upY,
+				double upZ) {
+			// eye and center are points, but up is a vector
+
+			double[] F = new double[3];
+			double[] UP = new double[3];
+			double[] s = new double[3];
+			double[] u = new double[3];
+
+			F[0] = cX - eX;
+			F[1] = cY - eY;
+			F[2] = cZ - eZ;
+			UP[0] = upX;
+			UP[1] = upY;
+			UP[2] = upZ;
+			normalizeddouble(F);
+			normalizeddouble(UP);
+			crossProd(F, UP, s);
+			crossProd(s, F, u);
+
+			float[][] M = new float[4][4];
+
+			M[0][0] = (float) s[0];
+			M[1][0] = (float) u[0];
+			M[2][0] = (float) -F[0];
+			M[3][0] = (float) 0;
+			M[0][1] = (float) s[1];
+			M[1][1] = (float) u[1];
+			M[2][1] = (float) -F[1];
+			M[3][1] = (float) 0;
+			M[0][2] = (float) s[2];
+			M[1][2] = (float) u[2];
+			M[2][2] = (float) -F[2];
+			M[3][2] = 0;
+			M[0][3] = 0;
+			M[1][3] = 0;
+			M[2][3] = 0;
+			M[3][3] = 1;
+
+			MultMatrix(M);
+			Translatef((float) -eX, (float) -eY, (float) -eZ);
+		}
+	public void Camera( float E, float e, float M,float m) {
+		  float tiltAngle = 45; 
+
+		    //1. camera faces the positive x axis
+		    Rotatef(-90*dg, 0, 1, 0);
+
+		    //2. camera on positive x axis
+		    Translatef(-M, 0, 0);
+
+		    //3. camera rotates around y axis (with the moon) 
+		    Rotatef(-m, 0.0f, 1.0f, 0.0f);
+
+		    // and so on reversing the solar transformation
+		    Translatef(0, -E, 0);
+		    Rotatef(-tiltAngle*dg, 0, 0, 1); // tilt angle
+		    // rotating around the "sun"; proceed angle
+		    Rotatef(-e, 0, 1, 0);
+		    
+		    // and reversing the robot transformation
+
+		    Translatef(-C+B, 0, 0);
+		    Rotatef(-c*dg, 0, 0, 1);
+		    Translatef(-B+A, 0, 0);
+		    Rotatef(-b*dg, 0, 0, 1);
+		    Translatef(-A, 0, 0);
+		    Rotatef(-a*dg, 0, 0, 1);
+		    Rotatef(-cnt*dg, 0, 1, 0);			  
+			
+	}
+*/
