@@ -173,8 +173,21 @@ void engine::Engine::e_StartUp(std::shared_ptr<engine::Engine> &e)
 		tmp_animator.animation_name = m_name;
 		tmp_animator.speed = 1.0f;
 		ecs->Get<EntityAnimator>(eid).e_Animator_Frame.push_back(tmp_animator);
-		e->animation->CreateAniamtor(eid, ecs->Get<EntityAnimator>(eid), m_name, m_path);
+		e->animation->CreateAnimator(eid, ecs->Get<EntityAnimator>(eid), m_name, m_path);
 	});
+	e_script->lua.set_function("CreateAnimatorIdle", [&](EntityID eid, std::string m_name, std::string m_path) {
+		Animation tmp_animator;
+		tmp_animator.animation_name = m_name;
+		tmp_animator.speed = 1.0f;
+		ecs->Get<EntityAnimator>(eid).e_Animator_Frame.push_back(tmp_animator);
+		e->animation->CreateAnimatorIdle(eid, ecs->Get<EntityAnimator>(eid), m_name, m_path);
+		});
+	e_script->lua.set_function("AddAnimation", [&](EntityID eid, std::string m_name, std::string m_path) {
+		e->animation->AddAnimation(ecs->Get<EntityAnimator>(eid), m_name, m_path);
+		});
+	e_script->lua.set_function("AddFrame", [&](EntityID eid, std::string m_name, std::string m_path) {
+		e->animation->AddFrame(ecs->Get<EntityAnimator>(eid), m_name, m_path);
+		});
 	e_script->lua.set_function("PlayAnimation", [&](EntityID eid, std::string name) {
 		for (int i = 0; i < e->animation->EntityWithAnimator.size(); i++) {
 			if (eid == (EntityID)e->animation->EntityWithAnimator.at(i)) {
@@ -191,18 +204,18 @@ void engine::Engine::e_StartUp(std::shared_ptr<engine::Engine> &e)
 			}
 		}
 		});
-	e_script->lua.set_function("LoopAnimation", [&](EntityID eid, bool activecode) {
+	e_script->lua.set_function("LoopAnimation", [&](EntityID eid, std::string name, bool activecode) {
 		for (int i = 0; i < e->animation->EntityWithAnimator.size(); i++) {
 			if (eid == (EntityID)e->animation->EntityWithAnimator.at(i)) {
-				e->animation->LoopAnimator(e->ecs->Get<EntityAnimator>(eid), activecode);
+				e->animation->LoopAnimator(e->ecs->Get<EntityAnimator>(eid), activecode, name);
 				break;
 			}
 		}
 		});
-	e_script->lua.set_function("SetSpeedAnimation", [&](EntityID eid, float speed) {
+	e_script->lua.set_function("SetSpeedAnimation", [&](EntityID eid, std::string name, float speed) {
 		for (int i = 0; i < e->animation->EntityWithAnimator.size(); i++) {
 			if (eid == (EntityID)e->animation->EntityWithAnimator.at(i)) {
-				e->animation->SetSpeed(e->ecs->Get<EntityAnimator>(eid), speed);
+				e->animation->SetSpeed(e->ecs->Get<EntityAnimator>(eid), name, speed);
 				break;
 			}
 		}

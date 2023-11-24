@@ -4,7 +4,7 @@
 
 std::shared_ptr<ResourceManager> a_resources = std::shared_ptr<ResourceManager>();
 
-void AnimatorManager::CreateAniamtor(int64_t a, EntityAnimator& animator, std::string name,std::string fileofAnimation)
+void AnimatorManager::CreateAnimator(int64_t a, EntityAnimator& animator, std::string name,std::string fileofAnimation)
 {
     //Progress need Implementation
         std::string tmpP = a_resources->pathToString(a_resources->getCurrentPath() / a_resources->stringToPath("assets") / a_resources->stringToPath(fileofAnimation));
@@ -31,15 +31,105 @@ void AnimatorManager::CreateAniamtor(int64_t a, EntityAnimator& animator, std::s
         if (!EntityExist) {
             EntityWithAnimator.push_back(a);
         }
+        bool nameexist = false;
+        int index_animation = -1;
+        for (int i = 0; i < animator.e_Animator_Frame.size(); i++) {
+            if (name == animator.e_Animator_Frame.at(i).animation_name) {
+                nameexist = true;
+                index_animation = i;
+                break;
+            }
+        }
+        if (!nameexist) { return; }
         animator.frame_count = 0;
         animator.isPlaying = false;
         animator.current_animation = 0;
         animator.current_frame = 0;
-        animator.isLooping = false;
-        std::string path_c = a_resources->pathToString(a_resources->getCurrentPath() / a_resources->stringToPath("assets") / a_resources->stringToPath(animator.e_Animator_Frame.at(animator.current_animation).at(animator.current_frame)));
+        animator.e_Animator_Frame.at(index_animation).isLooping = false;
+        animator.e_Animator_Frame.at(index_animation).animation_path = tmp_vector_animator;
+        std::string path_c = a_resources->pathToString(a_resources->getCurrentPath() / a_resources->stringToPath("assets") / a_resources->stringToPath(animator.e_Animator_Frame.at(animator.current_animation).animation_path.at(animator.current_frame)));
         animator.path = path_c;
 }
+void AnimatorManager::CreateAnimatorIdle(int64_t a, EntityAnimator& animator, std::string name, std::string fileofAnimation)
+{
+    //Progress need Implementation
+    std::string tmpP = a_resources->pathToString(a_resources->getCurrentPath() / a_resources->stringToPath("assets") / a_resources->stringToPath(fileofAnimation));
+    //Vector Array of <>
+    std::vector<std::string> tmp_vector_animator;
+    tmp_vector_animator.push_back(tmpP);
+    bool EntityExist = false;
+    for (int i = 0; i < EntityWithAnimator.size(); i++) {
+        if (EntityWithAnimator.at(i) == a) {
+            EntityExist = true;
+        }
+    }
+    if (!EntityExist) {
+        EntityWithAnimator.push_back(a);
+    }
+    bool nameexist = false;
+    int index_animation = -1;
+    for (int i = 0; i < animator.e_Animator_Frame.size(); i++) {
+        if (name == animator.e_Animator_Frame.at(i).animation_name) {
+            nameexist = true;
+            index_animation = i;
+            break;
+        }
+    }
+    if (!nameexist) { return; }
+    animator.frame_count = 0;
+    animator.isPlaying = false;
+    animator.current_animation = 0;
+    animator.current_frame = 0;
+    animator.e_Animator_Frame.at(index_animation).isLooping = false;
+    animator.e_Animator_Frame.at(index_animation).animation_path = tmp_vector_animator;
+    std::string path_c = a_resources->pathToString(a_resources->getCurrentPath() / a_resources->stringToPath("assets") / a_resources->stringToPath(animator.e_Animator_Frame.at(animator.current_animation).animation_path.at(animator.current_frame)));
+    animator.path = path_c;
+}
+void AnimatorManager::AddAnimation(EntityAnimator& animator, std::string name, std::string fileofAnimation)
+{
+    
+    bool nameexist = false;
+    int index_animation = -1;
+    for (int i = 0; i < animator.e_Animator_Frame.size(); i++) {
+        if (name == animator.e_Animator_Frame.at(i).animation_name) {
+            nameexist = true;
+            index_animation = i;
+            break;
+        }
+    }
+    if (!nameexist) { return; }
+    std::string tmpP = a_resources->pathToString(a_resources->getCurrentPath() / a_resources->stringToPath("assets") / a_resources->stringToPath(fileofAnimation));
+    for (const auto& entry :
+        std::filesystem::directory_iterator(a_resources->stringToPath(tmpP))) {
+        // Output the path of the file or subdirectory
+        std::string t = a_resources->pathToString(entry.path());
+        std::string new_t = t.substr(tmpP.size() + 1, t.size() - tmpP.size());
+        std::string new_name = new_t.substr(0, new_t.size() - 4);
+        std::cout << "t name: " << t << std::endl;
+        std::cout << "new_t name: " << new_t << std::endl;
+        std::cout << "new_name name: " << new_name << std::endl;
+        //Look fileofAnimation in 
+        animator.e_Animator_Frame.at(index_animation).animation_path.push_back(t);
+    }
+    animator.e_Animator_Frame.at(index_animation).isLooping = false;
+}
+void AnimatorManager::AddFrame(EntityAnimator& animator, std::string name, std::string fileofAnimation)
+{
+    std::string tmpP = a_resources->pathToString(a_resources->getCurrentPath() / a_resources->stringToPath("assets") / a_resources->stringToPath(fileofAnimation));
 
+    bool nameexist = false;
+    int index_animation = -1;
+    for (int i = 0; i < animator.e_Animator_Frame.size(); i++) {
+        if (name == animator.e_Animator_Frame.at(i).animation_name) {
+            nameexist = true;
+            index_animation = i;
+            break;
+        }
+    }
+    if (!nameexist) { return; }
+    animator.e_Animator_Frame.at(index_animation).isLooping = false;
+    animator.e_Animator_Frame.at(index_animation).animation_path.push_back(tmpP);
+}
 void AnimatorManager::PlayAnimator(EntityAnimator& animator, std::string name)
 {
     bool nameexist = false;
@@ -56,8 +146,7 @@ void AnimatorManager::PlayAnimator(EntityAnimator& animator, std::string name)
     animator.isPlaying = true;
     animator.current_animation = index_animation;
     animator.current_frame = 0;
-    animator.e_Animator_Frame.at(index_animation).isLooping = false;
-    std::string path_c = a_resources->pathToString(a_resources->getCurrentPath() / a_resources->stringToPath("assets") / a_resources->stringToPath(animator.e_Animator_Frame.at(animator.current_animation).at(animator.current_frame)));
+    std::string path_c = a_resources->pathToString(a_resources->getCurrentPath() / a_resources->stringToPath("assets") / a_resources->stringToPath(animator.e_Animator_Frame.at(animator.current_animation).animation_path.at(animator.current_frame)));
     animator.path = path_c;
 
 }
@@ -79,6 +168,7 @@ void AnimatorManager::LoopAnimator(EntityAnimator& animator, bool activecode, st
         }
     }
     if (!nameexist) { return; }
+    std::cout << "Animation can looop" << std::endl;
     animator.e_Animator_Frame.at(index_animation).isLooping = activecode;
 }
 
@@ -108,14 +198,17 @@ void AnimatorManager::NextFrame(EntityAnimator &animator)
         if (animator.e_Animator_Frame.at(animator.current_animation).isLooping) {
             if (animator.current_frame >= animator.e_Animator_Frame.at(animator.current_animation).animation_path.size()) {
                 animator.current_frame = 0;
+                
             }
         }
         else {
             if (animator.current_frame >= animator.e_Animator_Frame.at(animator.current_animation).animation_path.size()) {
                 animator.current_frame--;
+                
             }
         }
-        std::string path_c = a_resources->pathToString(a_resources->getCurrentPath() / a_resources->stringToPath("assets") / a_resources->stringToPath(animator.e_Animator_Frame.at(animator.current_animation).animation_path.at(animator.current_animation)));
+        std::string path_c = a_resources->pathToString(a_resources->getCurrentPath() / a_resources->stringToPath("assets") / a_resources->stringToPath(animator.e_Animator_Frame.at(animator.current_animation).animation_path.at(animator.current_frame)));
+        std::cout << path_c << std::endl;
         animator.path = path_c;
         animator.frame_count = animator.e_Animator_Frame.at(animator.current_animation).speed;
     }

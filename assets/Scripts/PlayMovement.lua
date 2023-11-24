@@ -12,21 +12,24 @@ function update()
 		--AddVelocity(0, 0, 10, 0)
 		Stop("Jump")
 		Play("Jump")
+		PlayAnimation(0, "Jump")
 		EAddForce(10)
 		--EToggle(3)
+	else
+		PlayAnimation(0, "Idle")
 	end
 	if KeyIsDown(KEYBOARD.S) then
 		--EAddVelocity(0, -10, 0)
 	end
 	--Future: Update the collide to take tag
 	if Collide(0, "Coin") then
-		print("It hit")
+		--print("It hit")
 		local z = CoinCollide(0, "Coin");
 		Play("Coin")
 		Destroy(z);
 	end
 	if Collide(0, "Flag") then
-		print("It hit Flag")
+		--print("It hit Flag")
 		Stop("Win")
 
 		Play("Win")

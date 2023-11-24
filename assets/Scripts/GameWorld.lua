@@ -10,16 +10,16 @@ function start()
     LoadSound("Win", "Win.wav");
     Play("Background")
 	AddScript(0, "PlayMovement")
-	ECreateObject("Grass", "Grass.jpg")
-    ECreateObject("Grass", "Grass.jpg")
-    ECreateObject("Dirt", "Dirt.jpg")
-    ECreateObject("Dirt", "Dirt.jpg")
-    ECreateObject("Grass", "Grass.jpg")
-    ECreateObject("Grass", "Grass.jpg")
-    ECreateObject("Dirt", "Dirt.jpg")
-    ECreateObject("Dirt", "Dirt.jpg")
-    ECreateObject("Flag", "Flag.png")
-    ECreateObject("Coin", "Coin.png")
+	ECreateObject("Grass", "Grass.jpg") --Entity 1
+    ECreateObject("Grass", "Grass.jpg") --Entity 2
+    ECreateObject("Dirt", "Dirt.jpg") --Entity 3
+    ECreateObject("Dirt", "Dirt.jpg") --Entity 4
+    ECreateObject("Grass", "Grass.jpg") --Entity 5
+    ECreateObject("Grass", "Grass.jpg") --Entity 6
+    ECreateObject("Dirt", "Dirt.jpg") --Entity 7
+    ECreateObject("Dirt", "Dirt.jpg") --Entity 8
+    ECreateObject("Flag", "Flag.png") --Entity 9
+    ECreateObject("Coin", "Coin.png") --Entity 10
     local z = GetSprite(9)
     z.layer = 11
     z.tag = "Flag"
@@ -71,8 +71,12 @@ function start()
     y1.layer = 11
     setActiveTrigger(14, true)
     SetPosition(14, 3000, 600, 0)
-    CreateAnimator(0, "UIText");
-    PlayAnimation(0, 0)
+    --CreateAnimator(0, "UIPlayer", "UIText");
+    --LoopAnimation(0, "UIPlayer", true)
+    --PlayAnimation(0, "UIPlayer")
+    CreateAnimatorIdle(0, "Idle", "Plumber.png")
+    CreateAnimatorIdle(0, "Jump", "JumpMan.png")
+    
     
 end
 
