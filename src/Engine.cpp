@@ -168,14 +168,17 @@ void engine::Engine::e_StartUp(std::shared_ptr<engine::Engine> &e)
 	e_script->lua.set_function("SetVolume", [&](std::string m_name, float vol) {e->sound->SetVolume(m_name, vol); });
 
 	//Animation
-	e_script->lua.set_function("CreateAnimator", [&](EntityID eid, std::string m_path) {
-		ecs->Get<EntityAnimator>(eid).speed = 1.0f;
-		e->animation->CreateAniamtor(eid, ecs->Get<EntityAnimator>(eid), m_path);
+	e_script->lua.set_function("CreateAnimator", [&](EntityID eid, std::string m_name, std::string m_path) {
+		Animation tmp_animator;
+		tmp_animator.animation_name = m_name;
+		tmp_animator.speed = 1.0f;
+		ecs->Get<EntityAnimator>(eid).e_Animator_Frame.push_back(tmp_animator);
+		e->animation->CreateAniamtor(eid, ecs->Get<EntityAnimator>(eid), m_name, m_path);
 	});
-	e_script->lua.set_function("PlayAnimation", [&](EntityID eid, int a) {
+	e_script->lua.set_function("PlayAnimation", [&](EntityID eid, std::string name) {
 		for (int i = 0; i < e->animation->EntityWithAnimator.size(); i++) {
 			if (eid == (EntityID)e->animation->EntityWithAnimator.at(i)) {
-				e->animation->PlayAnimator(e->ecs->Get<EntityAnimator>(eid), a)
+				e->animation->PlayAnimator(e->ecs->Get<EntityAnimator>(eid), name);
 				break;
 			}
 		}
@@ -227,7 +230,10 @@ void engine::Engine::e_ShutDown()
 {
 	if (this->animation->EntityWithAnimator.size() != 0) {
 		for (int i = 0; i < this->animation->EntityWithAnimator.size(); i++) {
-			this->ecs->Get<EntityAnimator>((EntityID)this->animation->EntityWithAnimator.at(i)).destoryit();
+			for (int j = 0; j < this->ecs->Get<EntityAnimator>(i).e_Animator_Frame.size(); j++) {
+				this->ecs->Get<EntityAnimator>(i).e_Animator_Frame.at(j).destoryit();
+			}
+			this->ecs->Get<EntityAnimator>(i).destoryit();
 		}
 		this->animation->EntityWithAnimator.clear();
 	}
@@ -590,6 +596,12 @@ void engine::Engine::EngineForEach()
 				EntityID c_auto = 0;
 				for (auto a_auto = this->animation->EntityWithAnimator.begin(); a_auto != this->animation->EntityWithAnimator.end();  a_auto++) {
 					if (e == this->animation->EntityWithAnimator.at(c_auto)) {
+						if (this->ecs->Get<EntityAnimator>(c_auto).e_Animator_Frame.size() != 0) {
+							for (int j = 0; j < this->ecs->Get<EntityAnimator>(c_auto).e_Animator_Frame.size(); j++) {
+								this->ecs->Get<EntityAnimator>(c_auto).e_Animator_Frame.at(j).destoryit();
+							}
+							this->ecs->Get<EntityAnimator>(c_auto).destoryit();
+						}
 						this->animation->EntityWithAnimator.erase(a_auto);
 						break;
 					}
@@ -619,14 +631,17 @@ void engine::Engine::EngineForEach()
 				}
 			}
 		});
-		for (int i = 0; i < this->animation->EntityWithAnimator.size(); i++) {
-			this->animation->NextFrame(this->ecs->Get<EntityAnimator>(this->animation->EntityWithAnimator.at(i)));
-			Sprite c_sprite = this->ecs->Get<Sprite>(this->animation->EntityWithAnimator.at(i));
-			EntityAnimator c_animation = this->ecs->Get<EntityAnimator>(this->animation->EntityWithAnimator.at(i));
-			this->graphics->g_tex[c_sprite.imageName].destoryit();
-			this->graphics->LoadFrame(c_sprite.imageName, c_animation.path);
-			this->ecs->Get<Sprite>(this->animation->EntityWithAnimator.at(i)).imagePath = c_animation.path;
+		if (this->animation->EntityWithAnimator.size() != 0) {
+			for (int i = 0; i < this->animation->EntityWithAnimator.size(); i++) {
+				this->animation->NextFrame(this->ecs->Get<EntityAnimator>(this->animation->EntityWithAnimator.at(i)));
+				Sprite c_sprite = this->ecs->Get<Sprite>(this->animation->EntityWithAnimator.at(i));
+				EntityAnimator c_animation = this->ecs->Get<EntityAnimator>(this->animation->EntityWithAnimator.at(i));
+				this->graphics->g_tex[c_sprite.imageName].destoryit();
+				this->graphics->LoadFrame(c_sprite.imageName, c_animation.path);
+				this->ecs->Get<Sprite>(this->animation->EntityWithAnimator.at(i)).imagePath = c_animation.path;
+			}
 		}
+		
 	}
 }
 

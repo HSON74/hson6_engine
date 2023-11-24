@@ -71,6 +71,8 @@ function start()
     y1.layer = 11
     setActiveTrigger(14, true)
     SetPosition(14, 3000, 600, 0)
+    CreateAnimator(0, "UIText");
+    PlayAnimation(0, 0)
     
 end
 

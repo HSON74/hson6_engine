@@ -91,20 +91,26 @@ struct Collider {
 struct BoxCollider : Collider {
     m_Types::vec3 size;
 };
+struct Animation {
+    bool isLooping;
+    std::string animation_name;
+    float speed;
+    std::vector<std::string> animation_path;
+    void destoryit() {
+        if (animation_path.size() != 0) {
+            animation_path.clear();
+        }
+    };
+};
 struct EntityAnimator {
     bool isPlaying;
-    bool isLooping;
     int current_animation;
     int current_frame;
-    float speed;
     float frame_count;
     std::string path;
-    std::vector<std::vector<std::string>> e_Animator_Frame;
+    std::vector<Animation> e_Animator_Frame;
     void destoryit() {
         if (e_Animator_Frame.size() != 0) {
-            for (int i = 0; i < e_Animator_Frame.size(); i++) {
-                e_Animator_Frame.at(i).clear();
-            }
             e_Animator_Frame.clear();
         }
     };
