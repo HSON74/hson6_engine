@@ -6,6 +6,7 @@
 #include "Types.h"
 #include "ECS.h"
 #include "GUIManager.h"
+#include "AnimatorManager.h"
 
 
 namespace engine
@@ -21,6 +22,7 @@ namespace engine
         std::shared_ptr<ScriptsManager> e_script;
         std::shared_ptr<ECS> ecs;
         std::shared_ptr<GUIManager> gui;
+        std::shared_ptr<AnimatorManager> animation;
         bool u_result = false;
 
         bool isPlay = false;

@@ -17,6 +17,7 @@ struct HUYSONSOMETHING {
         if (image_tex != nullptr) {
             wgpuTextureDestroy(image_tex);
             wgpuTextureRelease(image_tex);
+            image_tex = nullptr;
         }
     };
 };
@@ -60,6 +61,7 @@ public:
     void resize();
     bool LoadImage(const std::string& name, const std::string& path);
     bool LoadUI(const std::string& name, const std::string& path);
+    bool LoadFrame(const std::string& name, const std::string& path);
     void ShouldQuit();
     glm::mat4 multmatrix(glm::mat4 a, glm::mat4);
 };

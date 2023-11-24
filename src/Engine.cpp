@@ -167,6 +167,45 @@ void engine::Engine::e_StartUp(std::shared_ptr<engine::Engine> &e)
 	e_script->lua.set_function("Stop", [&](std::string m_name) {e->sound->Stop(m_name); });
 	e_script->lua.set_function("SetVolume", [&](std::string m_name, float vol) {e->sound->SetVolume(m_name, vol); });
 
+	//Animation
+	e_script->lua.set_function("CreateAnimator", [&](EntityID eid, std::string m_path) {
+		ecs->Get<EntityAnimator>(eid).speed = 1.0f;
+		e->animation->CreateAniamtor(eid, ecs->Get<EntityAnimator>(eid), m_path);
+	});
+	e_script->lua.set_function("PlayAnimation", [&](EntityID eid, int a) {
+		for (int i = 0; i < e->animation->EntityWithAnimator.size(); i++) {
+			if (eid == (EntityID)e->animation->EntityWithAnimator.at(i)) {
+				e->animation->PlayAnimator(e->ecs->Get<EntityAnimator>(eid), a)
+				break;
+			}
+		}
+	});
+	e_script->lua.set_function("StopAnimation", [&](EntityID eid, bool activecode) {
+		for (int i = 0; i < e->animation->EntityWithAnimator.size(); i++) {
+			if (eid == (EntityID)e->animation->EntityWithAnimator.at(i)) {
+				e->animation->StopAnimator(e->ecs->Get<EntityAnimator>(eid), activecode);
+				break;
+			}
+		}
+		});
+	e_script->lua.set_function("LoopAnimation", [&](EntityID eid, bool activecode) {
+		for (int i = 0; i < e->animation->EntityWithAnimator.size(); i++) {
+			if (eid == (EntityID)e->animation->EntityWithAnimator.at(i)) {
+				e->animation->LoopAnimator(e->ecs->Get<EntityAnimator>(eid), activecode);
+				break;
+			}
+		}
+		});
+	e_script->lua.set_function("SetSpeedAnimation", [&](EntityID eid, float speed) {
+		for (int i = 0; i < e->animation->EntityWithAnimator.size(); i++) {
+			if (eid == (EntityID)e->animation->EntityWithAnimator.at(i)) {
+				e->animation->SetSpeed(e->ecs->Get<EntityAnimator>(eid), speed);
+				break;
+			}
+		}
+		});
+
+
 	if (is_Test) {
 		e_script->LoadScript("Test", "Test");
 		std::string b = "Test";
@@ -186,6 +225,14 @@ void engine::Engine::addECSEnvironment(EntityID e) {
 }
 void engine::Engine::e_ShutDown()
 {
+	if (this->animation->EntityWithAnimator.size() != 0) {
+		for (int i = 0; i < this->animation->EntityWithAnimator.size(); i++) {
+			this->ecs->Get<EntityAnimator>((EntityID)this->animation->EntityWithAnimator.at(i)).destoryit();
+		}
+		this->animation->EntityWithAnimator.clear();
+	}
+	this->animation->shutdown();
+
 	ecs->Shutdown();
 	graphics->g_Shutdown();
 	sound->Shutdown();
@@ -289,6 +336,7 @@ void engine::Engine::EngineForEach()
 			if (sprite.EntityN == (this->graphics->sprites.at(m_s_i).EntityN)) {
 				this->graphics->sprites.at(m_s_i).position = sprite.position;
 				this->graphics->sprites.at(m_s_i).scale = sprite.scale;
+				this->graphics->sprites.at(m_s_i).imagePath = sprite.imagePath;
 				//this->graphics->sprites.at(m_s_i).active = sprite.active;
 				//this->graphics->sprites.at(m_s_i).in_active = sprite.in_active;
 				//this->graphics->sprites.at(m_s_i).imageName = sprite.imagePath;
@@ -503,8 +551,8 @@ void engine::Engine::EngineForEach()
 			result = false;
 			if (this->inputs->KeyIsPressed(this->graphics->window, GLFW_KEY_W, GLFW_RELEASE) || u_result) { ecs->Get<Rigidbody>(e).f_weight = 1.0f; }
 		});
-	}
-	ecs->ForEach<Sprite, Rigidbody>([&](EntityID e) {
+
+		ecs->ForEach<Sprite, Rigidbody>([&](EntityID e) {
 			//Deacceleration
 			if (ecs->Get<Rigidbody>(e).force.y - 60 < 0) {
 				ecs->Get<Rigidbody>(e).force.y = 0;
@@ -524,7 +572,7 @@ void engine::Engine::EngineForEach()
 			else {
 				ecs->Get<Rigidbody>(e).velocity.y -= 0.1;
 			}
-	});
+		});
 
 		ecs->ForEach<Sprite, Health>([&](EntityID e) {
 
@@ -539,10 +587,18 @@ void engine::Engine::EngineForEach()
 					}
 				}
 				if (!ecs->Get<Script>(e).name.empty()) { e_script->ScriptMap.erase(ecs->Get<Script>(e).name); }
+				EntityID c_auto = 0;
+				for (auto a_auto = this->animation->EntityWithAnimator.begin(); a_auto != this->animation->EntityWithAnimator.end();  a_auto++) {
+					if (e == this->animation->EntityWithAnimator.at(c_auto)) {
+						this->animation->EntityWithAnimator.erase(a_auto);
+						break;
+					}
+					c_auto++;
+				}
 				ecs->Destroy(e);
 			}
 
-			});
+		});
 		ecs->ForEach<Script>([&](EntityID entity) {
 			if (!ecs->Get<Script>(entity).name.empty()) {
 
@@ -562,8 +618,16 @@ void engine::Engine::EngineForEach()
 					std::cout << "What is the problem: " << what << std::endl;
 				}
 			}
-			}
-		);
+		});
+		for (int i = 0; i < this->animation->EntityWithAnimator.size(); i++) {
+			this->animation->NextFrame(this->ecs->Get<EntityAnimator>(this->animation->EntityWithAnimator.at(i)));
+			Sprite c_sprite = this->ecs->Get<Sprite>(this->animation->EntityWithAnimator.at(i));
+			EntityAnimator c_animation = this->ecs->Get<EntityAnimator>(this->animation->EntityWithAnimator.at(i));
+			this->graphics->g_tex[c_sprite.imageName].destoryit();
+			this->graphics->LoadFrame(c_sprite.imageName, c_animation.path);
+			this->ecs->Get<Sprite>(this->animation->EntityWithAnimator.at(i)).imagePath = c_animation.path;
+		}
+	}
 }
 
 void engine::Engine::addScript(EntityID e, const std::string name)
@@ -582,6 +646,7 @@ engine::Engine::Engine() {
 	engine::Engine::ecs = std::make_shared<ECS>();
 	engine::Engine::e_script = std::make_shared<ScriptsManager>();
 	gui = std::make_shared<GUIManager>();
+	animation = std::make_shared<AnimatorManager>();
 	engine::Engine::graphics->window_isRunning = true;
 }
 void engine::Engine::e_my_function()

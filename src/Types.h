@@ -92,21 +92,21 @@ struct BoxCollider : Collider {
     m_Types::vec3 size;
 };
 struct EntityAnimator {
+    bool isPlaying;
+    bool isLooping;
+    int current_animation;
+    int current_frame;
     float speed;
     float frame_count;
-    std::vector<std::vector< WGPUTexture>> e_Animator_Frame;
+    std::string path;
+    std::vector<std::vector<std::string>> e_Animator_Frame;
     void destoryit() {
-        for (int i = 0; i < e_Animator_Frame.size(); i++) {
-            for (int j = 0; j < e_Animator_Frame.at(i).size(); j++) {
-                if (e_Animator_Frame.at(i).at(j) != nullptr) {
-                    wgpuTextureDestroy(e_Animator_Frame.at(i).at(j));
-                    wgpuTextureRelease(e_Animator_Frame.at(i).at(j));
-                }
+        if (e_Animator_Frame.size() != 0) {
+            for (int i = 0; i < e_Animator_Frame.size(); i++) {
+                e_Animator_Frame.at(i).clear();
             }
-            e_Animator_Frame.at(i).clear();
+            e_Animator_Frame.clear();
         }
-        e_Animator_Frame.clear();
-        
     };
 };
 
