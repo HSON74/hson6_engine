@@ -433,6 +433,7 @@ void GraphicsManager::g_Shutdown()
         for (auto m_tex = g_tex.begin(); m_tex != g_tex.end(); m_tex++) {
             auto cur = m_tex->first;
             g_tex[cur].destoryit();
+            g_tex.erase(cur);
         }
         g_tex.clear();
         
@@ -441,6 +442,7 @@ void GraphicsManager::g_Shutdown()
         for (auto m_tex = g_UI.begin(); m_tex != g_UI.end(); m_tex++) {
             auto cur = m_tex->first;
             g_UI[cur].destoryit();
+            g_tex.erase(cur);
         }
         g_UI.clear();
 
@@ -487,7 +489,7 @@ glm::mat4 GraphicsManager::multmatrix(glm::mat4 a, glm::mat4 b)
 }
 ;
 
-void GraphicsManager::Draw(std::vector<Sprite>& sprites, std::vector<UI>& UI_sprites) {
+void GraphicsManager::Draw(const std::shared_ptr<Camera>& cam, std::vector<Sprite>& sprites, std::vector<UI>& UI_sprites) {
     
     //std::cout << "Drawing" << std::endl;
     WGPUCommandEncoder encoder = wgpuDeviceCreateCommandEncoder(device, nullptr);
@@ -522,19 +524,36 @@ void GraphicsManager::Draw(std::vector<Sprite>& sprites, std::vector<UI>& UI_spr
     else {
         uniforms.projection[0][0] *= Height;
         uniforms.projection[0][0] /= Width;
-    } */
-    if (Width < Height) {
-        uniforms.projection = mat4({ 2.0f / (Height - (-Height)), 0, 0, -((Height + (-Height))) / ((Height - (-Height))) },
-            { 0, 2.0f / (Width - (-Width)), 0, -(Width + (-Width)) / (Width - (-Width)) },
-            { 0, 0, -2.0f / ((Height - (-Height))), -((Height + (-Height))) / ((Height - (-Height))) },
-            { 0, 0, 0, 1 });
+    }*/
+    
+    /*uniforms.projection = mat4({(2.0f * cam->c_near) / (cam->right - cam->left), 0,  (cam->right + cam->left) / (cam->right - cam->left), 0},
+            { 0, (2.0f * cam->c_near) / (cam->top - cam->bottom), (cam->top + cam->bottom) / (cam->top - cam->bottom), 0 },
+            {0,	0, 	( -1* (cam->c_far + cam->c_near) / (cam->c_far - cam->c_near)), ((-2 * cam->c_far * cam->c_near) / (cam->c_far - cam->c_near)) },
+            { 0, 0, -1,0});*/
+    if (cam->active) {
+        uniforms.projection = mat4({ (2.0f * cam->c_near) / (cam->right - cam->left), 0,  -1 * (cam->right + cam->left) / (cam->right - cam->left), 0 },
+            { 0, (2.0f * cam->c_near) / (cam->bottom - cam->top), -1 * (cam->top + cam->bottom) / (cam->bottom - cam->top), 0 },
+            { 0,	0, 	((cam->c_far + cam->c_near) / (cam->c_far - cam->c_near)), ((-2 * cam->c_far * cam->c_near) / (cam->c_far - cam->c_near)) },
+            { 0, 0, 1,0 });
     }
     else {
-        uniforms.projection = mat4({ 2.0f / (Width - (-Width)), 0, 0, -((Width + (-Width))) / ((Width - (-Width))) },
-            { 0, 2.0f / (Height - (-Height)), 0, -(Height + (-Height)) / (Height - (-Height)) },
-            { 0, 0, -2.0f / ((Width - (-Width))), -((Width + (-Width))) / ((Width - (-Width))) },
-            { 0, 0, 0, 1 });
+        if (Width < Height) {
+            uniforms.projection = mat4({ 2.0f / (Height - (-Height)), 0, 0, -((Height + (-Height))) / ((Height - (-Height))) },
+                { 0, 2.0f / (Width - (-Width)), 0, -(Width + (-Width)) / (Width - (-Width)) },
+                { 0, 0, -2.0f / ((Height - (-Height))), -((Height + (-Height))) / ((Height - (-Height))) },
+                { 0, 0, 0, 1 });
+        }
+        else {
+            uniforms.projection = mat4({ 2.0f / (Width - (-Width)), 0, 0, -((Width + (-Width))) / ((Width - (-Width))) },
+                { 0, 2.0f / (Height - (-Height)), 0, -(Height + (-Height)) / (Height - (-Height)) },
+                { 0, 0, -2.0f / ((Width - (-Width))), -((Width + (-Width))) / ((Width - (-Width))) },
+                { 0, 0, 0, 1 });
+        }
     }
+
+     
+
+    
     wgpuQueueWriteBuffer(queue, uniform_buffer, 0, &uniforms, sizeof(Uniforms));
     WGPUBindGroup bind_group = nullptr;
     if (sprites.size() > 0) {

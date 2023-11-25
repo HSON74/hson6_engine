@@ -12,9 +12,26 @@ using namespace m_Types;
 
 void engine::Engine::e_StartUp(std::shared_ptr<engine::Engine> &e)
 {
-	gui->Startup(this->graphics->window);
+	engine::Engine::graphics = std::make_shared<GraphicsManager>();
+	engine::Engine::inputs = std::make_shared<InputManager>();
+	engine::Engine::sound = std::make_shared<SoundManager>();
+	engine::Engine::ecs = std::make_shared<ECS>();
+	engine::Engine::e_script = std::make_shared<ScriptsManager>();
+	gui = std::make_shared<GUIManager>();
+	animation = std::make_shared<AnimatorManager>();
+	cam = std::make_shared<Camera>();
+	cam->active = false;
+	cam->fovy = 60;
+	cam->aspect = (double)((double)(graphics->Width) / (double)(graphics->Height));
+	cam->c_far = 1.00f;
+	cam->c_near = 0.03f;
+	cam->r_far = 1000.0f;
+	cam->r_near = 0.03f;
+	e_perp(this->cam);
+	engine::Engine::graphics->window_isRunning = true;
 	graphics->g_StartUp();
 	inputs->StartUp();
+	//gui->Startup();
 	sound->StartUp();
 	e_script->StartUp();
 	//ECS
@@ -51,18 +68,18 @@ void engine::Engine::e_StartUp(std::shared_ptr<engine::Engine> &e)
 			}
 			
 		}
-		});
+	});
 	e_script->lua.set_function("GetSprite", [&](EntityID e) -> Sprite& { return ecs->Get<Sprite>(e); });
 	e_script->lua.set_function("SetHealth", [&](EntityID e, double p) {ecs->Get<Health>(e).percent = p; });
 	e_script->lua.set_function("SetPosition", [&](EntityID e, float x, float y, float z) {ecs->setPosition(e, m_Types::vec3(x, y, z)); });
 	e_script->lua.set_function("AddForce", [&](EntityID e, float force) {
-		ecs->Get<Rigidbody>(e).force.y = (float)(360 * (((9.8 + force) * ecs->Get<Rigidbody>(e).f_weight)) / ecs->Get<Rigidbody>(e).mass);
+		ecs->Get<Rigidbody>(e).force.y = (float)(360 * (((9.8 + force) * 5 * ecs->Get<Rigidbody>(e).f_weight)) / ecs->Get<Rigidbody>(e).mass);
 		ecs->Get<Rigidbody>(e).f_weight -= (float)(1.0f / 3600.0f);
 	});
 	e_script->lua.set_function("AddVelocity", [&](EntityID e, float x, float y, float z) {
-		ecs->Get<Rigidbody>(e).velocity.x = x;
-		ecs->Get<Rigidbody>(e).velocity.y = y; 
-		ecs->Get<Rigidbody>(e).velocity.z = z;
+		ecs->Get<Rigidbody>(e).velocity.x = x * 5;
+		ecs->Get<Rigidbody>(e).velocity.y = y * 5;
+		ecs->Get<Rigidbody>(e).velocity.z = z * 5;
 		});
 	e_script->lua.set_function("SetScale", [&](EntityID e, float x, float y, float z) {
 		ecs->Get<Sprite>(e).scale.x = x; 
@@ -81,7 +98,7 @@ void engine::Engine::e_StartUp(std::shared_ptr<engine::Engine> &e)
 		ecs->Get<Rigidbody>(e).mass = 1;
 		ecs->Get<Rigidbody>(e).velocity = vec3(0,0,0);
 		ecs->Get<Rigidbody>(e).force = vec3(0, 0, 0);
-		ecs->Get<Rigidbody>(e).meters_per_second = -9.8 * 360;
+		ecs->Get<Rigidbody>(e).meters_per_second = -9.8 * 360 * 5;
 		ecs->Get<Rigidbody>(e).f_weight = 1.0f;
 		ecs->Get<Rigidbody>(e).canToggle = false;
 		ecs->Get<Rigidbody>(e).toggle = 0.0f;
@@ -102,7 +119,7 @@ void engine::Engine::e_StartUp(std::shared_ptr<engine::Engine> &e)
 		ecs->Get<Rigidbody>(ecs->sizeEntity - 1).mass = 1;
 		ecs->Get<Rigidbody>(ecs->sizeEntity - 1).velocity = vec3(0, 0, 0);
 		ecs->Get<Rigidbody>(ecs->sizeEntity - 1).force = vec3(0, 0, 0);
-		ecs->Get<Rigidbody>(ecs->sizeEntity - 1).meters_per_second = +9.8 * 360;
+		ecs->Get<Rigidbody>(ecs->sizeEntity - 1).meters_per_second = (9.8 * 360 * 5);
 		ecs->Get<Rigidbody>(ecs->sizeEntity - 1).f_weight = 1.0f;
 		ecs->Get<BoxCollider>(ecs->sizeEntity - 1).IsStatis = false;
 		});
@@ -118,16 +135,16 @@ void engine::Engine::e_StartUp(std::shared_ptr<engine::Engine> &e)
 	});
 	e_script->lua.set_function("EAddForce", [&](float force) {
 		for (int i = 0; i < ecs->environmentManipulation.size(); i++) {
-			ecs->Get<Rigidbody>(ecs->environmentManipulation.at(i)).force.y = -1 * (float)(360 * (((9.8 + force) * ecs->Get<Rigidbody>(ecs->environmentManipulation.at(i)).f_weight)) / ecs->Get<Rigidbody>(ecs->environmentManipulation.at(i)).mass);
+			ecs->Get<Rigidbody>(ecs->environmentManipulation.at(i)).force.y = -1 * (float)(360 * (((9.8 + force) * 5 * ecs->Get<Rigidbody>(ecs->environmentManipulation.at(i)).f_weight)) / ecs->Get<Rigidbody>(ecs->environmentManipulation.at(i)).mass);
 			ecs->Get<Rigidbody>(ecs->environmentManipulation.at(i)).f_weight -= (float)(1.0f / 3600.0f);
 		}
 		
 		});
 	e_script->lua.set_function("EAddVelocity", [&](float x, float y, float z) {
 		for (int i = 0; i < ecs->environmentManipulation.size(); i++) {
-			ecs->Get<Rigidbody>(ecs->environmentManipulation.at(i)).velocity.x = -1*x;
-			ecs->Get<Rigidbody>(ecs->environmentManipulation.at(i)).velocity.y = -1 * y;
-			ecs->Get<Rigidbody>(ecs->environmentManipulation.at(i)).velocity.z = -1 * z;
+			ecs->Get<Rigidbody>(ecs->environmentManipulation.at(i)).velocity.x = -1*x * 5;
+			ecs->Get<Rigidbody>(ecs->environmentManipulation.at(i)).velocity.y = -1 * y * 5;
+			ecs->Get<Rigidbody>(ecs->environmentManipulation.at(i)).velocity.z = -1 * z * 5;
 
 		}
 		
@@ -256,8 +273,18 @@ void engine::Engine::e_ShutDown()
 	graphics->g_Shutdown();
 	sound->Shutdown();
 	e_script->Shutdown();
-	gui->Shutdown();
+	//gui->Shutdown();
 	std::cout << "Engine Shutdown"<< std::endl;
+}
+
+void engine::Engine::e_perp(std::shared_ptr<Camera>& cam)
+{
+	double tmp_fovy = (double)((cam->fovy * 3.14) / 180.00);
+
+	cam->top = (float) (cam->c_near * std::tanf((float)tmp_fovy / 2.0f));
+	cam->bottom = (float) (-1.00f*cam->top);
+	cam->right = (float)((float)cam->aspect * cam->top);
+	cam->left = (float)(- 1.00f * cam->right);
 }
 
 void engine::Engine::e_ReunGameLoop(const e_UpdateCallback& callback)
@@ -273,13 +300,24 @@ void engine::Engine::e_ReunGameLoop(const e_UpdateCallback& callback)
 		
 		inputs->Update();
 		//glfwWaitEvents();
+		if (graphics->Height > graphics->Width) {
+			this->cam->aspect = (double)((float)(this->graphics->Height)/ (float) (this->graphics->Width));
+			this->cam->c_near = (float)(this->graphics->Height * this->cam->r_near);
+			this->cam->c_far = (float)(this->graphics->Height * this->cam->r_far);
+		}
+		else {
+			this->cam->aspect = (double)((float)(this->graphics->Width)/ (float)(this->graphics->Height));
+			this->cam->c_near = (float)(this->graphics->Width * this->cam->r_near);
+			this->cam->c_far = (float)(this->graphics->Width * this->cam->r_far);
+		}
+		e_perp(this->cam);
 		e_Update();
 		callback();
 		if (this->GetKeyDown(GLFW_KEY_P)) {
 			isPlay = !isPlay;
 		}
 		this->EngineForEach();
-		graphics->Draw(graphics->sprites, graphics->UI_sprites);
+		graphics->Draw(cam, graphics->sprites, graphics->UI_sprites);
 		
 		
 
@@ -294,22 +332,9 @@ void engine::Engine::e_ReunGameLoop(const e_UpdateCallback& callback)
 		{
 			accumulator -= dt;
 		}
-		if (this->GetKeyDown(GLFW_KEY_R)) {
-			ecs->Shutdown();
-			e_script->Shutdown();
-			if (!this->graphics->g_tex.empty()) {
-				for (auto m_tex = this->graphics->g_tex.begin(); m_tex != this->graphics->g_tex.end(); m_tex++) {
-					auto cur = m_tex->first;
-					this->graphics->g_tex[cur].destoryit();
-				}
-				this->graphics->g_tex.clear();
-
-			}
-			if (this->graphics->sprites.size() != 0) { this->graphics->sprites.clear(); }
-			e_script->LoadScript("CoinCollect", "CoinCollect");
-			std::string b = "CoinCollect";
-			e_script->ScriptMap[b]();
-
+		if (this->GetKeyDown(GLFW_KEY_APOSTROPHE)) {
+			this->Reboot = true;
+			this->graphics->window_isRunning = false;
 
 		}
 		glfwPostEmptyEvent();
@@ -419,7 +444,7 @@ void engine::Engine::EngineForEach()
 			if (u_result) {
 				for (int i = 0; i < this->ecs->environmentManipulation.size(); i++) {
 					EntityID e1 = this->ecs->environmentManipulation.at(i);
-					float m_gravity = 360 * ((9.8f * ecs->Get<Rigidbody>(e1).f_weight)) / ecs->Get<Rigidbody>(e1).mass;
+					float m_gravity = 360 * ((9.8f * 5*ecs->Get<Rigidbody>(e1).f_weight)) / ecs->Get<Rigidbody>(e1).mass;
 					m_Types::vec3 s_position;
 					Rigidbody s_rigidbody = this->ecs->Get<Rigidbody>(e1);
 					s_position.x = s_rigidbody.velocity.x * DeltaTime;
@@ -428,12 +453,12 @@ void engine::Engine::EngineForEach()
 					this->ecs->setPosition(e1, s_position);
 					if (this->ecs->Get<Rigidbody>(this->ecs->environmentManipulation.at(i)).velocity.x < 0 && isFlipLeft) {
 						isFlipLeft = false;
-						std::cout << "It fliped is false" << std::endl;
+						//std::cout << "It fliped is false" << std::endl;
 						tmp1 = -1;
 					}
 					else if (this->ecs->Get<Rigidbody>(this->ecs->environmentManipulation.at(i)).velocity.x > 0 && !isFlipLeft) {
 						isFlipLeft = true;
-						std::cout << "It fliped is true" << std::endl;
+						//std::cout << "It fliped is true" << std::endl;
 						tmp1 = -1;
 					}
 				}
@@ -668,14 +693,7 @@ bool engine::Engine::GetKeyDown(int key) {
 
 };
 engine::Engine::Engine() {
-	engine::Engine::graphics = std::make_shared<GraphicsManager>();
-	engine::Engine::inputs = std::make_shared<InputManager>();
-	engine::Engine::sound = std::make_shared<SoundManager>();
-	engine::Engine::ecs = std::make_shared<ECS>();
-	engine::Engine::e_script = std::make_shared<ScriptsManager>();
-	gui = std::make_shared<GUIManager>();
-	animation = std::make_shared<AnimatorManager>();
-	engine::Engine::graphics->window_isRunning = true;
+	
 }
 void engine::Engine::e_my_function()
 {
@@ -723,127 +741,6 @@ void engine::Engine::e_Update()
 	}
 }
 /*
-* //View;
-	 public void Perspective(double fovy, double aspect, double near, double far) {
-			double left, right, bottom, top;
-
-			fovy = fovy*dg;
-			
-			top = near*Math.tan(fovy/2);
-			bottom = -top;
-			right = aspect*top;
-			left = -right;
-			
-			Ortho((float) left, (float)right, (float)bottom, (float)top, (float)near, (float)far);
-	}
-	 void Ortho(float l, float r, float b, float t, float n, float f) {// look at z near and far
-	  	    float PROJ[] = {2f*n/(r-l),			0,				0,			0,   
-	  	    	            	0, 			2f*n/(t-b), 		0, 			0,   
-	  	    	        	(r+l)/(r-l),	(t+b)/(t-b), 	-(f+n)/(f-n),	-1,  
-	  	    	             	0, 				0, 			-2*f*n/(f-n), 	0
-	  	    }; 
-	    	
-			// connect the PROJECTION matrix to the vertex shader
-			int projLoc = gl.glGetUniformLocation(vfPrograms,  "proj_matrix"); 
-			gl.glProgramUniformMatrix4fv(vfPrograms, projLoc,  1,  false,  PROJ, 0);
-
-	 }
-	 public void LookAt(double eX, double eY, double eZ, double cX, double cY, double cZ, double upX, double upY,
-				double upZ) {
-			// eye and center are points, but up is a vector
-
-			// 1. change center into a vector:
-			// glTranslated(-eX, -eY, -eZ);
-			cX = cX - eX;
-			cY = cY - eY;
-			cZ = cZ - eZ;
-
-			// 2. The angle of center on xz plane and x axis
-			// i.e. angle to rot so center in the neg. yz plane
-			double a = Math.atan(cZ / cX);
-			if (cX == 0)
-				a = Math.PI;
-			else if (cX >= 0) {
-				a = a + Math.PI / 2;
-			} else {
-				a = a - Math.PI / 2;
-			}
-
-			// 3. The angle between the center and y axis
-			// i.e. angle to rot so the center is in the negative z axis
-			double b = Math.acos(cY / Math.sqrt(cX * cX + cY * cY + cZ * cZ));
-			b = b - Math.PI / 2;
-
-			// 4. up rotate around y axis (a) radians
-			double upx = upX * Math.cos(a) + upZ * Math.sin(a);
-			double upz = -upX * Math.sin(a) + upZ * Math.cos(a);
-			upX = upx;
-			upZ = upz;
-
-			// 5. up rotate around x axis (b) radians
-			double upy = upY * Math.cos(b) - upZ * Math.sin(b);
-			upz = upY * Math.sin(b) + upZ * Math.cos(b);
-			upY = upy;
-			upZ = upz;
-
-			// 6. the angle between the vector of (up projected on xy plane) and y axis
-			// i.e. the angle to rot around z so that up is in yz plane
-			double c = Math.atan(upX / upY);
-			if (upY < 0) {
-				c = c + Math.PI;
-			}
-			Rotatef((float) c, 0, 0, 1);
-			// up in yz plane
-			Rotatef((float) b, 1, 0, 0);
-			// center in negative z axis
-			Rotatef((float) a, 0, 1, 0);
-			// center in yz plane
-			Translatef((float) -eX, (float) -eY, (float) -eZ);
-			// eye at the origin
-		}
-
-		public void gluLookAt(double eX, double eY, double eZ, double cX, double cY, double cZ, double upX, double upY,
-				double upZ) {
-			// eye and center are points, but up is a vector
-
-			double[] F = new double[3];
-			double[] UP = new double[3];
-			double[] s = new double[3];
-			double[] u = new double[3];
-
-			F[0] = cX - eX;
-			F[1] = cY - eY;
-			F[2] = cZ - eZ;
-			UP[0] = upX;
-			UP[1] = upY;
-			UP[2] = upZ;
-			normalizeddouble(F);
-			normalizeddouble(UP);
-			crossProd(F, UP, s);
-			crossProd(s, F, u);
-
-			float[][] M = new float[4][4];
-
-			M[0][0] = (float) s[0];
-			M[1][0] = (float) u[0];
-			M[2][0] = (float) -F[0];
-			M[3][0] = (float) 0;
-			M[0][1] = (float) s[1];
-			M[1][1] = (float) u[1];
-			M[2][1] = (float) -F[1];
-			M[3][1] = (float) 0;
-			M[0][2] = (float) s[2];
-			M[1][2] = (float) u[2];
-			M[2][2] = (float) -F[2];
-			M[3][2] = 0;
-			M[0][3] = 0;
-			M[1][3] = 0;
-			M[2][3] = 0;
-			M[3][3] = 1;
-
-			MultMatrix(M);
-			Translatef((float) -eX, (float) -eY, (float) -eZ);
-		}
 	public void Camera( float E, float e, float M,float m) {
 		  float tiltAngle = 45; 
 
@@ -862,15 +759,4 @@ void engine::Engine::e_Update()
 		    // rotating around the "sun"; proceed angle
 		    Rotatef(-e, 0, 1, 0);
 		    
-		    // and reversing the robot transformation
-
-		    Translatef(-C+B, 0, 0);
-		    Rotatef(-c*dg, 0, 0, 1);
-		    Translatef(-B+A, 0, 0);
-		    Rotatef(-b*dg, 0, 0, 1);
-		    Translatef(-A, 0, 0);
-		    Rotatef(-a*dg, 0, 0, 1);
-		    Rotatef(-cnt*dg, 0, 1, 0);			  
-			
-	}
-*/
+		    // and reversing the robot transformation*/

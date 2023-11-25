@@ -54,7 +54,7 @@ public:
     bool window_isRunning;
     void g_StartUp();
     void g_Shutdown();
-    void Draw(std::vector<Sprite>& sprites, std::vector<UI>& UI_sprites);
+    void Draw(const std::shared_ptr<Camera>& cam,std::vector<Sprite>& sprites, std::vector<UI>& UI_sprites);
     friend class InputManager;
     void changeBackground(float r1, float g1, float b1);
     GraphicsManager();

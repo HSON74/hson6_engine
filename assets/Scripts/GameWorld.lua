@@ -52,7 +52,7 @@ function start()
     local y = GetSprite(11)
     y.tag = "Background"
     y.layer = 12
-    SetScale(11, 100, 100, 0)
+    SetScale(11, 100, 100, 2)
     ECreateObject("Coin", "Coin.png")
     local y1 = GetSprite(12)
     y1.tag = "Coin"
@@ -70,10 +70,10 @@ function start()
     y1.tag = "Coin"
     y1.layer = 11
     setActiveTrigger(14, true)
-    SetPosition(14, 3000, 600, 0)
-    --CreateAnimator(0, "UIPlayer", "UIText");
-    --LoopAnimation(0, "UIPlayer", true)
-    --PlayAnimation(0, "UIPlayer")
+    SetPosition(14, 3000, 600, 0);
+    CreateAnimator(0, "UIPlayer", "UIText");
+    LoopAnimation(0, "UIPlayer", true)
+    PlayAnimation(0, "UIPlayer")
     CreateAnimatorIdle(0, "Idle", "Plumber.png")
     CreateAnimatorIdle(0, "Jump", "JumpMan.png")
     

@@ -16,9 +16,9 @@ void AnimatorManager::CreateAnimator(int64_t a, EntityAnimator& animator, std::s
             std::string t = a_resources->pathToString(entry.path());
             std::string new_t = t.substr(tmpP.size() + 1, t.size() - tmpP.size());
             std::string new_name = new_t.substr(0, new_t.size() - 4);
-            std::cout << "t name: " << t << std::endl;
+            /* std::cout << "t name: " << t << std::endl;
             std::cout << "new_t name: " << new_t << std::endl;
-            std::cout << "new_name name: " << new_name << std::endl;
+            std::cout << "new_name name: " << new_name << std::endl;*/
             //Look fileofAnimation in 
             tmp_vector_animator.push_back(t);
         }

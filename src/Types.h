@@ -81,6 +81,16 @@ struct Rigidbody {
 };
 struct Camera {
     bool active;
+    double fovy;
+    double aspect;
+    float c_near;
+    float c_far;
+    float r_near;
+    float r_far;
+    float left;
+    float right;
+    float bottom; 
+    float top; 
 };
 struct Collider {
     bool active;
