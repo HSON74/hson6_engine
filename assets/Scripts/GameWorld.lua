@@ -4,11 +4,11 @@ function start()
 	local x = GetSprite(0);
 	x.layer = 2
     SetScale(0, 3, 3, 0)
-    LoadSound("Background", "Music.wav");
+   -- LoadSound("Background", "Music.wav");
     LoadSound("Jump", "Jump.wav");
     LoadSound("Coin", "Coin.wav");
     LoadSound("Win", "Win.wav");
-    Play("Background")
+    --Play("Background")
 	AddScript(0, "PlayMovement")
 	ECreateObject("Grass", "Grass.jpg") --Entity 1
     ECreateObject("Grass", "Grass.jpg") --Entity 2

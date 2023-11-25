@@ -531,10 +531,16 @@ void GraphicsManager::Draw(const std::shared_ptr<Camera>& cam, std::vector<Sprit
             {0,	0, 	( -1* (cam->c_far + cam->c_near) / (cam->c_far - cam->c_near)), ((-2 * cam->c_far * cam->c_near) / (cam->c_far - cam->c_near)) },
             { 0, 0, -1,0});*/
     if (cam->active) {
-        uniforms.projection = mat4({ (2.0f * cam->c_near) / (cam->right - cam->left), 0,  -1 * (cam->right + cam->left) / (cam->right - cam->left), 0 },
+        /*uniforms.projection = mat4({ (2.0f * cam->c_near) / (cam->right - cam->left), 0,  -1 * (cam->right + cam->left) / (cam->right - cam->left), 0 },
             { 0, (2.0f * cam->c_near) / (cam->bottom - cam->top), -1 * (cam->top + cam->bottom) / (cam->bottom - cam->top), 0 },
             { 0,	0, 	((cam->c_far + cam->c_near) / (cam->c_far - cam->c_near)), ((-2 * cam->c_far * cam->c_near) / (cam->c_far - cam->c_near)) },
-            { 0, 0, 1,0 });
+            { 0, 0, 1,0 }); */
+        uniforms.projection = mat4(0.0f);
+        uniforms.projection[0][0] = (float)(1.0f / (cam->aspect * std::tanf(((float)(cam->fovy*3.14f) / 180) / 2.0f)));
+        uniforms.projection[1][1] = (float)(1.0f / (cam->aspect * std::tanf((float)cam->fovy / 2.0f)));
+        uniforms.projection[2][2] = (float)(cam->c_far / (cam->c_far - cam->c_near));
+        uniforms.projection[2][3] = (float)1.0f;
+        uniforms.projection[3][2] = (float)( - 1 * (cam->c_far + cam->c_near) / (cam->c_far - cam->c_near));
     }
     else {
         if (Width < Height) {
