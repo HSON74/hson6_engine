@@ -19,11 +19,12 @@ add_packages("spdlog", {
 add_packages("sokol", {
     public = true
 })
-add_packages("wgpu-native", "glfw3webgpu",{public = true})
-add_packages("soloud", {public = true})
-add_packages("glm", {public = true})
-add_packages("stb", {public = true})
+
+--add_packages("soloud", {public = true})
+--add_packages("glm", {public = true})
+--add_packages("stb", {public = true})
 add_packages("imgui", {public = true})
+--add_packages("wgpu-native", "glfw3webgpu",{public = true})
 
 set_policy("build.warning", true) -- show warnings
 set_warnings("all") -- warn about many things

@@ -30,8 +30,8 @@
 #include <math.h>
 #include "sol/sol.hpp"
 #include <imgui.h>
-#include <imgui-1.89.8/backends/imgui_impl_wgpu.h>
-#include <imgui-1.89.8/backends/imgui_impl_glfw.h>
+#include <backends/imgui_impl_wgpu.h>
+#include <backends/imgui_impl_glfw.h>
 
 
 
