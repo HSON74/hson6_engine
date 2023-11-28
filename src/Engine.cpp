@@ -317,6 +317,7 @@ void engine::Engine::e_ReunGameLoop(const e_UpdateCallback& callback)
 			isPlay = !isPlay;
 		}
 		this->EngineForEach();
+		//this->gui->Draw();
 		graphics->Draw(cam, graphics->sprites, graphics->UI_sprites);
 		
 		
@@ -350,6 +351,7 @@ void engine::Engine::UserInput(std::shared_ptr<engine::Engine>& e) {
 		std::cout << "User click on the exit box" << std::endl;
 		e->graphics->ShouldQuit();
 	}
+	
 	
 	if (e->inputs->KeyIsPressed(e->graphics->window, GLFW_KEY_Q, GLFW_PRESS) || e->inputs->KeyIsPressed(e->graphics->window, GLFW_KEY_ESCAPE, GLFW_PRESS)) {
 		std::cout << "User press Q or Escape to close Windows" << std::endl;
