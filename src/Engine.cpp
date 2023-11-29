@@ -7,6 +7,7 @@
     lua.set_function(CAT("Get",STR(type)), [&](EntityID e){return ECS::Get<type>(e)});\
 }*/
 
+//Eldon and Huy Game Engine for Mark World
 
 using namespace m_Types;
 
