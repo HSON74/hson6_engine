@@ -663,7 +663,7 @@ void engine::Engine::EngineForEach()
 				}
 				sol::protected_function_result script2result = e_script->ScriptMap[script_name]();
 				if (script2result.valid()) {
-					//std::cout << script_name << std::endl;
+					std::cout << script_name << std::endl;
 				}
 				else {
 					sol::error err = script2result;

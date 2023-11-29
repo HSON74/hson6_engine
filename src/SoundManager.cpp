@@ -4,7 +4,7 @@
 std::shared_ptr<ResourceManager> s_resources = std::shared_ptr<ResourceManager>();
 bool SoundManager::LoadSound(const std::string& name, const std::string& path)
 {
-	std::string tmp_p = this->sSPath + "assets\\" + path;
+	std::string tmp_p = this->sSPath + "assets/" + path;
 	if (my_sound_dict.count(name) != 0) {
 		std::cout << "The name: " << name << "is already taken" << std::endl;
 		return false;
