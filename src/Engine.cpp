@@ -18,7 +18,7 @@ void engine::Engine::e_StartUp(std::shared_ptr<engine::Engine> &e)
 	engine::Engine::sound = std::make_shared<SoundManager>();
 	engine::Engine::ecs = std::make_shared<ECS>();
 	engine::Engine::e_script = std::make_shared<ScriptsManager>();
-	gui = std::make_shared<GUIManager>();
+	//gui = std::make_shared<GUIManager>();
 	animation = std::make_shared<AnimatorManager>();
 	cam = std::make_shared<Camera>();
 	cam->active = false;
