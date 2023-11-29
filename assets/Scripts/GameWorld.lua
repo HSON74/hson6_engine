@@ -103,6 +103,7 @@ function start()
     ECreateObject("Dirt", "Dirt.png") --Entity 23
     ECreateObject("Dirt", "Dirt.png") --Entity 24
     ECreateObject("Dirt", "Dirt.png") --Entity 25
+    --ECreateObject("Dirt", "Dirt.png") --Entity 27
     local dirt = GetSprite(16)
     dirt.tag = "Ground"
     dirt = GetSprite(17)

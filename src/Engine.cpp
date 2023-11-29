@@ -45,6 +45,9 @@ void engine::Engine::e_StartUp(std::shared_ptr<engine::Engine> &e)
 		ecs->Get<Sprite>(e).scale.x = 0;
 		ecs->Get<Sprite>(e).scale.y = 0;
 		ecs->Get<Sprite>(e).scale.z = 0;
+		ecs->Get<BoxCollider>(e).size.x = 0;
+		ecs->Get<BoxCollider>(e).size.y = 0;
+		ecs->Get<BoxCollider>(e).size.z = 0;
 		//ecs->Get<Health>(e).percent = -1;
 		/*auto& container = ecs->GetAppropriateSparseSet<Sprite>();
 		for (const auto& [entity, value] : container) {
@@ -636,7 +639,7 @@ void engine::Engine::EngineForEach()
 						this->graphics->g_tex[a].destoryit();
 						this->graphics->g_tex.erase(a);
 						this->graphics->sprites.erase(this->graphics->sprites.begin() + m_s_i);
-						std::cout << a << " is died" << std::endl;
+						//std::cout << a << " is died" << std::endl;
 					}
 				}
 				if (!ecs->Get<Script>(e).name.empty()) { e_script->ScriptMap.erase(ecs->Get<Script>(e).name); }
@@ -664,12 +667,12 @@ void engine::Engine::EngineForEach()
 				std::string script_name = ecs->Get<Script>(entity).name;
 				//std::cout << entity << std::endl;
 				if (e_script->ScriptMap.count(script_name) == 0) {
-					std::cout << script_name << std::endl;
+					//std::cout << script_name << std::endl;
 					e_script->LoadScript(script_name, script_name);
 				}
 				sol::protected_function_result script2result = e_script->ScriptMap[script_name]();
 				if (script2result.valid()) {
-					std::cout << script_name << std::endl;
+					//std::cout << script_name << std::endl;
 				}
 				else {
 					sol::error err = script2result;

@@ -41,14 +41,21 @@ function update()
 		if Collide(0, "Coin") then
 			--print("It hit")
 			local z = CoinCollide(0, "Coin");
+			Stop("Coin")
 			Play("Coin")
 			Destroy(z);
+		else
+			
 		end
 		if Collide(0, "Flag") then
 			--print("It hit Flag")
 			Stop("Win")
 
 			Play("Win")
+		end
+		if Collide(0, "Lava") then
+			--print("It hit Flag")
+			Quit();
 		end
 	end
 	
