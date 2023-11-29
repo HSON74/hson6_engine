@@ -44,7 +44,8 @@ void engine::Engine::e_StartUp(std::shared_ptr<engine::Engine> &e)
 	e_script->lua.set_function("Destroy", [&](const EntityID e) {
 		ecs->Get<Sprite>(e).scale.x = 0;
 		ecs->Get<Sprite>(e).scale.y = 0;
-		ecs->Get<Sprite>(e).scale.z = 0; 
+		ecs->Get<Sprite>(e).scale.z = 0;
+		//ecs->Get<Health>(e).percent = -1;
 		/*auto& container = ecs->GetAppropriateSparseSet<Sprite>();
 		for (const auto& [entity, value] : container) {
 			Sprite s = ecs->Get<Sprite>(entity);
