@@ -11,7 +11,7 @@ function update()
 	if KeyIsDown(KEYBOARD.W) then
 		--AddVelocity(0, 0, 10, 0)
 		Stop("Jump")
-		Play("Jump")
+		--Play("Jump")
 		PlayAnimation(0, "Jump")
 		EAddForce(20)
 		--EToggle(3)
@@ -25,14 +25,14 @@ function update()
 	if Collide(0, "Coin") then
 		--print("It hit")
 		local z = CoinCollide(0, "Coin");
-		Play("Coin")
+		--Play("Coin")
 		Destroy(z);
 	end
 	if Collide(0, "Flag") then
 		--print("It hit Flag")
 		Stop("Win")
 
-		Play("Win")
+		--Play("Win")
 	end
 	
 end

@@ -8,7 +8,7 @@ function start()
     LoadSound("Jump", "Jump.wav");
     LoadSound("Coin", "Coin.wav");
     LoadSound("Win", "Win.wav");
-    Play("Background")
+    --Play("Background")
 	AddScript(0, "PlayMovement")
 	ECreateObject("Grass", "Grass.jpg") --Entity 1
     ECreateObject("Grass", "Grass.jpg") --Entity 2
