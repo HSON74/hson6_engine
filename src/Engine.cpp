@@ -78,13 +78,13 @@ void engine::Engine::e_StartUp(std::shared_ptr<engine::Engine> &e)
 	e_script->lua.set_function("SetHealth", [&](EntityID e, double p) {ecs->Get<Health>(e).percent = p; });
 	e_script->lua.set_function("SetPosition", [&](EntityID e, float x, float y, float z) {ecs->setPosition(e, m_Types::vec3(x, y, z)); });
 	e_script->lua.set_function("AddForce", [&](EntityID e, float force) {
-		ecs->Get<Rigidbody>(e).force.y = (float)(360 * (((9.8 + force) * 5 * ecs->Get<Rigidbody>(e).f_weight)) / ecs->Get<Rigidbody>(e).mass);
+		ecs->Get<Rigidbody>(e).force.y = (float)(360 * (((9.8 + force)   * ecs->Get<Rigidbody>(e).f_weight)) / ecs->Get<Rigidbody>(e).mass);
 		ecs->Get<Rigidbody>(e).f_weight -= (float)(1.0f / 3600.0f);
 	});
 	e_script->lua.set_function("AddVelocity", [&](EntityID e, float x, float y, float z) {
-		ecs->Get<Rigidbody>(e).velocity.x = x * 5;
-		ecs->Get<Rigidbody>(e).velocity.y = y * 5;
-		ecs->Get<Rigidbody>(e).velocity.z = z * 5;
+		ecs->Get<Rigidbody>(e).velocity.x = x  ;
+		ecs->Get<Rigidbody>(e).velocity.y = y  ;
+		ecs->Get<Rigidbody>(e).velocity.z = z  ;
 		});
 	e_script->lua.set_function("SetScale", [&](EntityID e, float x, float y, float z) {
 		ecs->Get<Sprite>(e).scale.x = x; 
@@ -103,7 +103,7 @@ void engine::Engine::e_StartUp(std::shared_ptr<engine::Engine> &e)
 		ecs->Get<Rigidbody>(e).mass = 1;
 		ecs->Get<Rigidbody>(e).velocity = vec3(0,0,0);
 		ecs->Get<Rigidbody>(e).force = vec3(0, 0, 0);
-		ecs->Get<Rigidbody>(e).meters_per_second = -9.8 * 360 * 5;
+		ecs->Get<Rigidbody>(e).meters_per_second = -9.8 * 360  ;
 		ecs->Get<Rigidbody>(e).f_weight = 1.0f;
 		ecs->Get<Rigidbody>(e).canToggle = false;
 		ecs->Get<Rigidbody>(e).toggle = 0.0f;
@@ -124,7 +124,7 @@ void engine::Engine::e_StartUp(std::shared_ptr<engine::Engine> &e)
 		ecs->Get<Rigidbody>(ecs->sizeEntity - 1).mass = 1;
 		ecs->Get<Rigidbody>(ecs->sizeEntity - 1).velocity = vec3(0, 0, 0);
 		ecs->Get<Rigidbody>(ecs->sizeEntity - 1).force = vec3(0, 0, 0);
-		ecs->Get<Rigidbody>(ecs->sizeEntity - 1).meters_per_second = (9.8 * 360 * 5);
+		ecs->Get<Rigidbody>(ecs->sizeEntity - 1).meters_per_second = (9.8 * 360  );
 		ecs->Get<Rigidbody>(ecs->sizeEntity - 1).f_weight = 1.0f;
 		ecs->Get<BoxCollider>(ecs->sizeEntity - 1).IsStatis = false;
 		});
@@ -140,16 +140,16 @@ void engine::Engine::e_StartUp(std::shared_ptr<engine::Engine> &e)
 	});
 	e_script->lua.set_function("EAddForce", [&](float force) {
 		for (int i = 0; i < ecs->environmentManipulation.size(); i++) {
-			ecs->Get<Rigidbody>(ecs->environmentManipulation.at(i)).force.y = -1 * (float)(360 * (((9.8 + force) * 5 * ecs->Get<Rigidbody>(ecs->environmentManipulation.at(i)).f_weight)) / ecs->Get<Rigidbody>(ecs->environmentManipulation.at(i)).mass);
-			ecs->Get<Rigidbody>(ecs->environmentManipulation.at(i)).f_weight -= (float)(1.0f / 3600.0f);
+			ecs->Get<Rigidbody>(ecs->environmentManipulation.at(i)).force.y = -1 * (float)(360 * (((9.8 + force)   * ecs->Get<Rigidbody>(ecs->environmentManipulation.at(i)).f_weight)) / ecs->Get<Rigidbody>(ecs->environmentManipulation.at(i)).mass);
+			ecs->Get<Rigidbody>(ecs->environmentManipulation.at(i)).f_weight -= (float)(1.0f / 360.0f);
 		}
 		
 		});
 	e_script->lua.set_function("EAddVelocity", [&](float x, float y, float z) {
 		for (int i = 0; i < ecs->environmentManipulation.size(); i++) {
-			ecs->Get<Rigidbody>(ecs->environmentManipulation.at(i)).velocity.x = -1*x * 5;
-			ecs->Get<Rigidbody>(ecs->environmentManipulation.at(i)).velocity.y = -1 * y * 5;
-			ecs->Get<Rigidbody>(ecs->environmentManipulation.at(i)).velocity.z = -1 * z * 5;
+			ecs->Get<Rigidbody>(ecs->environmentManipulation.at(i)).velocity.x = -1*x  ;
+			ecs->Get<Rigidbody>(ecs->environmentManipulation.at(i)).velocity.y = -1 * y  ;
+			ecs->Get<Rigidbody>(ecs->environmentManipulation.at(i)).velocity.z = -1 * z  ;
 
 		}
 		
@@ -280,6 +280,7 @@ void engine::Engine::e_ShutDown()
 	e_script->Shutdown();
 	//gui->Shutdown();
 	std::cout << "Engine Shutdown"<< std::endl;
+	std::exit(0);
 }
 
 void engine::Engine::e_perp(std::shared_ptr<Camera>& cam)
@@ -451,7 +452,7 @@ void engine::Engine::EngineForEach()
 			if (u_result) {
 				for (int i = 0; i < this->ecs->environmentManipulation.size(); i++) {
 					EntityID e1 = this->ecs->environmentManipulation.at(i);
-					float m_gravity = 360 * ((9.8f * 5*ecs->Get<Rigidbody>(e1).f_weight)) / ecs->Get<Rigidbody>(e1).mass;
+					float m_gravity = 360 * ((9.8f  *ecs->Get<Rigidbody>(e1).f_weight)) / ecs->Get<Rigidbody>(e1).mass;
 					m_Types::vec3 s_position;
 					Rigidbody s_rigidbody = this->ecs->Get<Rigidbody>(e1);
 					s_position.x = s_rigidbody.velocity.x * DeltaTime;
@@ -600,7 +601,8 @@ void engine::Engine::EngineForEach()
 			m_test++;
 			m_tmp = m_Types::vec3(0, 0, 0);
 			result = false;
-			if (this->inputs->KeyIsPressed(this->graphics->window, GLFW_KEY_W, GLFW_RELEASE) || u_result) { ecs->Get<Rigidbody>(e).f_weight = 1.0f; }
+			//if (this->inputs->KeyIsPressed(this->graphics->window, GLFW_KEY_W, GLFW_RELEASE) || u_result) { ecs->Get<Rigidbody>(e).f_weight = 1.0f; }
+			if (this->ecs->Collide(0, "Ground")) { ecs->Get<Rigidbody>(e).f_weight = 1.0f; }
 		});
 
 		ecs->ForEach<Sprite, Rigidbody>([&](EntityID e) {
