@@ -11,7 +11,7 @@ bool SoundManager::LoadSound(const std::string& name, const std::string& path)
 	}
 	else {
 		my_sound_dict[name].load(tmp_p.c_str());
-		//std::cout << "Load sound " << tmp_p << std::endl;
+		std::cout << "Load sound " << tmp_p << std::endl;
 	}
 	return true;
 }
@@ -28,7 +28,7 @@ void SoundManager::StartUp()
 void SoundManager::Play(const std::string& name)
 {
 	if (my_sound_dict.size() != 0 && my_sound_dict.contains(name)) {
-		//std::cout << "Play Sound" << std::endl;
+		std::cout << "Play Sound" << std::endl;
 		double t = my_sound_dict[name].getLength();
 		double t_1 = 1;
 		int handle = sound_m.play(my_sound_dict[name]);
@@ -57,7 +57,7 @@ void SoundManager::Loop(const std::string& name, bool activecode)
 void SoundManager::Stop(const std::string& name)
 {
 	if (my_sound_dict.size() != 0 && my_sound_dict.contains(name)) {
-		//std::cout << "Stop Sound" << std::endl;
+		std::cout << "Stop Sound" << std::endl;
 		my_sound_dict[name].stop();
 	}
 	else {

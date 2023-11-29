@@ -42,7 +42,11 @@ void engine::Engine::e_StartUp(std::shared_ptr<engine::Engine> &e)
 		ecs->CreateUI(name); 
 	});
 	e_script->lua.set_function("Destroy", [&](const EntityID e) {
-		auto& container = ecs->GetAppropriateSparseSet<Sprite>();
+		ecs->Get<Sprite>(e).scale.x = 0;
+		ecs->Get<Sprite>(e).scale.y = 0;
+		ecs->Get<Sprite>(e).scale.z = 0;
+		//ecs->Get<Health>(e).percent = -1;
+		/*auto& container = ecs->GetAppropriateSparseSet<Sprite>();
 		for (const auto& [entity, value] : container) {
 			Sprite s = ecs->Get<Sprite>(entity);
 			if (e == (s.EntityN)) {
@@ -68,7 +72,7 @@ void engine::Engine::e_StartUp(std::shared_ptr<engine::Engine> &e)
 				}
 			}
 			
-		}
+		}*/
 	});
 	e_script->lua.set_function("GetSprite", [&](EntityID e) -> Sprite& { return ecs->Get<Sprite>(e); });
 	e_script->lua.set_function("SetHealth", [&](EntityID e, double p) {ecs->Get<Health>(e).percent = p; });
@@ -663,7 +667,7 @@ void engine::Engine::EngineForEach()
 				}
 				sol::protected_function_result script2result = e_script->ScriptMap[script_name]();
 				if (script2result.valid()) {
-					//std::cout << script_name << std::endl;
+					std::cout << script_name << std::endl;
 				}
 				else {
 					sol::error err = script2result;

@@ -8,7 +8,7 @@ function start()
     LoadSound("Jump", "Jump.wav");
     LoadSound("Coin", "Coin.wav");
     LoadSound("Win", "Win.wav");
-    Play("Background")
+    --Play("Background")
 	AddScript(0, "PlayMovement")
 	ECreateObject("Grass", "Grass.jpg") --Entity 1
     ECreateObject("Grass", "Grass.jpg") --Entity 2
@@ -71,11 +71,15 @@ function start()
     y1.layer = 11
     setActiveTrigger(14, true)
     SetPosition(14, 3000, 600, 0);
-    CreateAnimator(0, "UIPlayer", "UIText");
-    LoopAnimation(0, "UIPlayer", true)
-    PlayAnimation(0, "UIPlayer")
-    CreateAnimatorIdle(0, "Idle", "Plumber.png")
-    CreateAnimatorIdle(0, "Jump", "JumpMan.png")
+    CreateObject("Jump", "JumpMan.png")
+    local jump = GetSprite(15)
+    jump.layer = 9
+    SetScale(15, 0, 0, 0)
+    --CreateAnimator(0, "UIPlayer", "UIText");
+    --LoopAnimation(0, "UIPlayer", true)
+    --PlayAnimation(0, "UIPlayer")
+    --CreateAnimatorIdle(0, "Idle", "Plumber.png")
+    --CreateAnimatorIdle(0, "Jump", "JumpMan.png")
     
     
 end
