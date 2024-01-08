@@ -1,4 +1,4 @@
 # Super Mark World I
- xmake.
- xmake run.
+ xmake to compile the game engine. 
+ xmake run to run the game.
 
